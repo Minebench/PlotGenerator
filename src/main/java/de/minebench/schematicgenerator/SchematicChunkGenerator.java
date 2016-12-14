@@ -21,10 +21,8 @@ import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.generator.BlockPopulator;
 import org.bukkit.generator.ChunkGenerator;
 
-import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -33,22 +31,18 @@ public class SchematicChunkGenerator extends ChunkGenerator {
     private final SchematicGenerator plugin;
     private final CuboidClipboard schematic;
 
-    private final int x;
-    private final int y;
-    private final int z;
+    private final Vector center;
 
     public SchematicChunkGenerator() {
         plugin = SchematicGenerator.getPlugin(SchematicGenerator.class);
         schematic = null;
-        x = 0;
-        y = 0;
-        z = 0;
+        center = new Vector(0,0,0);
     }
 
     public SchematicChunkGenerator(SchematicGenerator plugin, String id) {
-        int z1 = 0;
-        int y1 = 0;
-        int x1 = 0;
+        int z = 0;
+        int y = 0;
+        int x = 0;
         this.plugin = plugin;
         String args[] = id.split(",");
 
@@ -60,35 +54,39 @@ public class SchematicChunkGenerator extends ChunkGenerator {
 
         if (args.length > 3) {
             try {
-                x1 = Integer.parseInt(args[1]);
-                y1 = Integer.parseInt(args[2]);
-                z1 = Integer.parseInt(args[3]);
+                x = Integer.parseInt(args[1]);
+                y = Integer.parseInt(args[2]);
+                z = Integer.parseInt(args[3]);
             } catch (NumberFormatException e) {
                 plugin.getLogger().log(Level.SEVERE, "Can't load center coordinates from " + id + "!", e);
             }
         } else {
-            x1 = 0;
-            y1 = 0;
-            z1 = 0;
+            x = 0;
+            y = 0;
+            z = 0;
         }
-        z = z1;
-        y = y1;
-        x = x1;
+        center = new Vector(x, y, z);
     }
 
     @Override
     public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) {
         ChunkData data = createChunkData(world);
         if (schematic != null && !Vector.ZERO.equals(schematic.getSize())) {
-            int xStart = x * 16 % schematic.getWidth();
-            int zStart = z * 16 % schematic.getLength();
-            for (int ix = 0; ix < 16; ix++) {
-                int schemx = (xStart + ix) % schematic.getWidth();
-                for (int iz = 0; iz < 16; iz++) {
-                    int schemz = (zStart + iz) % schematic.getLength();
-                    for (int iy = 0; iy < schematic.getHeight(); iy++) {
-                        BaseBlock block = schematic.getBlock(new Vector(schemx, iy, schemz));
-                        data.setBlock(schemx, iy, schemz, block.getId(), (byte) block.getData());
+            int startX = (x * 16 - center.getBlockX()) % schematic.getWidth();
+            while (startX < 0) {
+                startX = schematic.getWidth() + startX;
+            }
+            int startZ = (z * 16 - center.getBlockZ()) % schematic.getLength();
+            while (startZ < 0) {
+                startZ = schematic.getLength() + startZ;
+            }
+            for (int chunkX = 0; chunkX < 16; chunkX++) {
+                int schemx = (startX + chunkX) % schematic.getWidth();
+                for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
+                    int schemz = (startZ + chunkZ) % schematic.getLength();
+                    for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
+                        BaseBlock block = schematic.getBlock(new Vector(schemx, chunkY, schemz));
+                        data.setBlock(schemx, chunkY, schemz, block.getId(), (byte) block.getData());
                     }
                 }
             }
@@ -98,7 +96,7 @@ public class SchematicChunkGenerator extends ChunkGenerator {
 
     @Override
     public Location getFixedSpawnLocation(World world, Random random) {
-        Location loc = new Location(world, x, y, z);
+        Location loc = new Location(world, center.getX(), center.getY(), center.getZ());
         if (!loc.getChunk().isLoaded()) {
             loc.getChunk().load();
         }
