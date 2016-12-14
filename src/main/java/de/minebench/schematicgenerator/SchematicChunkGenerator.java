@@ -72,11 +72,11 @@ public class SchematicChunkGenerator extends ChunkGenerator {
     public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) {
         ChunkData data = createChunkData(world);
         if (schematic != null && !Vector.ZERO.equals(schematic.getSize())) {
-            int startX = (x * 16 - center.getBlockX()) % schematic.getWidth();
+            int startX = (x * 16 + center.getBlockX()) % schematic.getWidth();
             while (startX < 0) {
                 startX = schematic.getWidth() + startX;
             }
-            int startZ = (z * 16 - center.getBlockZ()) % schematic.getLength();
+            int startZ = (z * 16 + center.getBlockZ()) % schematic.getLength();
             while (startZ < 0) {
                 startZ = schematic.getLength() + startZ;
             }
