@@ -1,0 +1,7 @@
+name: ${project.name}
+version: '${minecraft.plugin.version}'
+main: de.minebench.schematicgenerator.SchematicGenerator
+depend: [WorldEdit]
+softdepend: [MbRegionConomy,WorldGuard]
+authors: [Phoenix616]
+description: ${project.description}
