@@ -79,15 +79,17 @@ public class SchematicChunkGenerator extends ChunkGenerator {
     @Override
     public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) {
         ChunkData data = createChunkData(world);
-        int xStart = x * 16 % schematic.getWidth();
-        int zStart = z * 16 % schematic.getLength();
-        for (int ix = 0; ix < 16; ix++) {
-            int schemx = (xStart + ix) % schematic.getWidth();
-            for (int iz = 0; iz < 16; iz++) {
-                int schemz = (zStart + iz) % schematic.getLength();
-                for (int iy = 0; iy < schematic.getHeight(); iy++) {
-                    BaseBlock block = schematic.getBlock(new Vector(schemx, iy, schemz));
-                    data.setBlock(schemx, iy, schemz, block.getId(), (byte) block.getData());
+        if (schematic != null && !Vector.ZERO.equals(schematic.getSize())) {
+            int xStart = x * 16 % schematic.getWidth();
+            int zStart = z * 16 % schematic.getLength();
+            for (int ix = 0; ix < 16; ix++) {
+                int schemx = (xStart + ix) % schematic.getWidth();
+                for (int iz = 0; iz < 16; iz++) {
+                    int schemz = (zStart + iz) % schematic.getLength();
+                    for (int iy = 0; iy < schematic.getHeight(); iy++) {
+                        BaseBlock block = schematic.getBlock(new Vector(schemx, iy, schemz));
+                        data.setBlock(schemx, iy, schemz, block.getId(), (byte) block.getData());
+                    }
                 }
             }
         }
