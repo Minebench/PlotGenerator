@@ -81,12 +81,12 @@ public class SchematicChunkGenerator extends ChunkGenerator {
                 startZ = schematic.getLength() + startZ;
             }
             for (int chunkX = 0; chunkX < 16; chunkX++) {
-                int schemx = (startX + chunkX) % schematic.getWidth();
+                int schemX = (startX + chunkX) % schematic.getWidth();
                 for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
-                    int schemz = (startZ + chunkZ) % schematic.getLength();
+                    int schemZ = (startZ + chunkZ) % schematic.getLength();
                     for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
-                        BaseBlock block = schematic.getBlock(new Vector(schemx, chunkY, schemz));
-                        data.setBlock(schemx, chunkY, schemz, block.getId(), (byte) block.getData());
+                        BaseBlock block = schematic.getBlock(new Vector(schemX, chunkY, schemZ));
+                        data.setBlock(chunkX, chunkY, chunkZ, block.getId(), (byte) block.getData());
                     }
                 }
             }
