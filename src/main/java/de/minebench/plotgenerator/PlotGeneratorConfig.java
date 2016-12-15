@@ -90,6 +90,8 @@ public class PlotGeneratorConfig {
             return null;
         }
 
+        plugin.getLogger().log(Level.INFO, "Loading config " + config.getName());
+
         CuboidClipboard configSchematic = null;
         Vector center = new Vector(0, 0, 0);
         if (config.contains("config")) {
