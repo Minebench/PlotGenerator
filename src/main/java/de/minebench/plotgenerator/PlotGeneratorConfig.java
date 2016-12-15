@@ -33,6 +33,9 @@ public class PlotGeneratorConfig {
     }
 
     public static PlotGeneratorConfig fromId(PlotGenerator plugin, String id) {
+        if (id == null || id.isEmpty()) {
+            return null;
+        }
         CuboidClipboard schematic = null;
         Vector center = new Vector(0, 0, 0);
         String args[] = id.split(",");
