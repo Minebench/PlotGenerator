@@ -1,6 +1,6 @@
 name: ${project.name}
 version: '${minecraft.plugin.version}'
-main: de.minebench.schematicgenerator.SchematicGenerator
+main: de.minebench.plotgenerator.PlotGenerator
 depend: [WorldEdit]
 softdepend: [MbRegionConomy,WorldGuard]
 authors: [Phoenix616]

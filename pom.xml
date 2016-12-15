@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.minebench</groupId>
-    <artifactId>schematicgenerator</artifactId>
+    <artifactId>plotgenerator</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>SchematicGenerator</name>
+    <name>PlotGenerator</name>
 
     <description>Generate a world by repeating a schematic. Ideal for plots!</description>
     <properties>

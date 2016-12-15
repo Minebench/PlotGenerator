@@ -1,4 +1,4 @@
-package de.minebench.schematicgenerator;
+package de.minebench.plotgenerator;
 
 /*
  * Copyright 2016 Max Lee (https://github.com/Phoenix616/)
@@ -27,7 +27,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.util.logging.Level;
 
-public final class SchematicGenerator extends JavaPlugin {
+public final class PlotGenerator extends JavaPlugin {
 
     private WorldEditPlugin worldEdit;
     private WorldGuardPlugin worldGuard;
@@ -56,7 +56,7 @@ public final class SchematicGenerator extends JavaPlugin {
 
     @Override
     public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
-        return new SchematicChunkGenerator(this, id);
+        return new PlotChunkGenerator(this, id);
     }
 
     public WorldEditPlugin getWorldEdit() {

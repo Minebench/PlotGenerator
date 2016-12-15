@@ -1,4 +1,4 @@
-package de.minebench.schematicgenerator;
+package de.minebench.plotgenerator;
 
 /*
  * Copyright 2016 Max Lee (https://github.com/Phoenix616/)
@@ -26,20 +26,20 @@ import org.bukkit.generator.ChunkGenerator;
 import java.util.Random;
 import java.util.logging.Level;
 
-public class SchematicChunkGenerator extends ChunkGenerator {
+public class PlotChunkGenerator extends ChunkGenerator {
 
-    private final SchematicGenerator plugin;
+    private final PlotGenerator plugin;
+
     private final CuboidClipboard schematic;
-
     private final Vector center;
 
-    public SchematicChunkGenerator() {
-        plugin = SchematicGenerator.getPlugin(SchematicGenerator.class);
+    public PlotChunkGenerator() {
+        plugin = PlotGenerator.getPlugin(PlotGenerator.class);
         schematic = null;
         center = new Vector(0,0,0);
     }
 
-    public SchematicChunkGenerator(SchematicGenerator plugin, String id) {
+    public PlotChunkGenerator(PlotGenerator plugin, String id) {
         int z = 0;
         int y = 0;
         int x = 0;
