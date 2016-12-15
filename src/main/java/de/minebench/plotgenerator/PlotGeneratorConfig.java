@@ -44,27 +44,34 @@ public class PlotGeneratorConfig {
                 String[] parts = arg.split("=");
                 if ("schem".equalsIgnoreCase(parts[0])) {
                     schematic = plugin.loadSchematic(parts[1]);
+                    plugin.getLogger().log(Level.INFO, "Schematic: " + parts[1] + " (size: " + (schematic == null ? "null" : schematic.getSize()) + ")");
                 } else if ("config".equalsIgnoreCase(parts[0])) {
                     PlotGeneratorConfig config = plugin.getGeneratorConfig(parts[1]);
                     if (config != null) {
+                        plugin.getLogger().log(Level.INFO, "Using config " + parts[1]);
                         schematic = config.getSchematic();
                         center = config.getCenter();
+                    } else {
+                        plugin.getLogger().log(Level.WARNING, "Config " + parts[1] + " not found?");
                     }
                 } else if ("x".equalsIgnoreCase(parts[0])) {
                     try {
                         center.setX(Integer.parseInt(parts[1]));
+                        plugin.getLogger().log(Level.INFO, "Center x:" + center.getBlockX());
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse center x coordinates from " + parts[1] + "!", e);
                     }
                 } else if ("y".equalsIgnoreCase(parts[0])) {
                     try {
                         center.setY(Integer.parseInt(parts[1]));
+                        plugin.getLogger().log(Level.INFO, "Center y:" + center.getBlockY());
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse center y coordinates from " + parts[1] + "!", e);
                     }
                 } else if ("z".equalsIgnoreCase(parts[0])) {
                     try {
                         center.setZ(Integer.parseInt(parts[1]));
+                        plugin.getLogger().log(Level.INFO, "Center z:" + center.getBlockZ());
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse center z coordinates from " + parts[1] + "!", e);
                     }
@@ -80,12 +87,42 @@ public class PlotGeneratorConfig {
             return null;
         }
 
-        int x = config.getInt("center.x", 0);
-        int y = config.getInt("center.y", 0);
-        int z = config.getInt("center.z", 0);
-        CuboidClipboard schematic = config.contains("schematic") ? plugin.loadSchematic(config.getString("schematic")) : null;
+        CuboidClipboard configSchematic = null;
+        Vector center = new Vector(0, 0, 0);
+        if (config.contains("config")) {
+            String configName = config.getString("config");
+            PlotGeneratorConfig genConfig = plugin.getGeneratorConfig(configName);
+            if (genConfig != null) {
+                configSchematic = genConfig.getSchematic();
+                center = genConfig.getCenter();
+                plugin.getLogger().log(Level.INFO, "Using config " + configName);
+            } else {
+                plugin.getLogger().log(Level.WARNING, "Config " + configName + " not found?");
+            }
+        }
 
-        return new PlotGeneratorConfig(schematic, new Vector(x, y, z));
+        if (config.contains("center.x")) {
+            center.setX(config.getInt("center.x"));
+            plugin.getLogger().log(Level.INFO, "Center x:" + center.getBlockX());
+        }
+        if (config.contains("center.y")) {
+            center.setY(config.getInt("center.y"));
+            plugin.getLogger().log(Level.INFO, "Center y:" + center.getBlockY());
+        }
+        if (config.contains("center.z")) {
+            center.setZ(config.getInt("center.z"));
+            plugin.getLogger().log(Level.INFO, "Center z:" + center.getBlockZ());
+        }
+
+        CuboidClipboard schematic = config.contains("schematic") ? plugin.loadSchematic(config.getString("schematic")) : null;
+        if (schematic == null) {
+            schematic = configSchematic;
+            plugin.getLogger().log(Level.INFO, "Schematic is null." + (schematic != null ? " Using the one from the config option. (Size: " + schematic.getSize() + ")" : ""));
+        } else {
+            plugin.getLogger().log(Level.INFO, "Schematic: " + config.getString("schematic") + " (size: " + (schematic == null ? "null" : schematic.getSize()) + ")");
+        }
+
+        return new PlotGeneratorConfig(schematic, center);
     }
 
     public CuboidClipboard getSchematic() {
