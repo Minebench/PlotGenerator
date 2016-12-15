@@ -55,10 +55,10 @@ public final class PlotGenerator extends JavaPlugin {
         if (getServer().getPluginManager().isPluginEnabled("MbRegionConomy")) {
             regionConomy = MbRegionConomy.getPlugin(MbRegionConomy.class);
         }
-        // Plugin startup logic
+        getCommand("plotgenerator").setExecutor(new PlotGeneratorCommand(this));
     }
 
-    public void loadConfig() {
+    void loadConfig() {
         saveDefaultConfig();
         reloadConfig();
         worldConfigs = new HashMap<>();

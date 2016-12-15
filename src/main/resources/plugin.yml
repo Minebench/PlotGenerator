@@ -5,3 +5,17 @@ depend: [WorldEdit]
 softdepend: [MbRegionConomy,WorldGuard]
 authors: [Phoenix616]
 description: ${project.description}
+commands:
+   plotgenerator:
+      aliases: [plotgen]
+      description: Main plugin command
+      usage: /<command> [reload]
+      permission: plotgenerator.command
+      permission-message: You don't have the permission <permission>
+permissions:
+   plotgenerator.command:
+      description: Gives permission to the plugin command
+      default: op
+   plotgenerator.command.reload:
+      description: Gives permission to reload the plugin
+      default: op
