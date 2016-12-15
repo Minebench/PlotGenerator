@@ -21,10 +21,14 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.schematic.SchematicFormat;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import me.ChrisvA.MbRegionConomy.MbRegionConomy;
+import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 public final class PlotGenerator extends JavaPlugin {
@@ -33,6 +37,7 @@ public final class PlotGenerator extends JavaPlugin {
     private WorldGuardPlugin worldGuard;
     private MbRegionConomy regionConomy;
     private File weSchemDir;
+    private Map<String, PlotGeneratorConfig> worldConfigs;
 
     @Override
     public void onEnable() {
@@ -51,6 +56,13 @@ public final class PlotGenerator extends JavaPlugin {
             regionConomy = MbRegionConomy.getPlugin(MbRegionConomy.class);
         }
         // Plugin startup logic
+    }
+
+    public void loadConfig() {
+        saveDefaultConfig();
+        reloadConfig();
+        worldConfigs = new HashMap<>();
+        getConfig().getConfigurationSection("worlds").getKeys(false).forEach(this::getGeneratorConfig);
     }
 
 
@@ -96,5 +108,21 @@ public final class PlotGenerator extends JavaPlugin {
             getLogger().log(Level.SEVERE, "Error loading file " + file.getAbsolutePath(), e);
             return null;
         }
+    }
+
+    public PlotGeneratorConfig getGeneratorConfig(World world) {
+        return getGeneratorConfig(world.getName());
+    }
+
+    public PlotGeneratorConfig getGeneratorConfig(String worldName) {
+        if (worldConfigs.containsKey(worldName)) {
+            return worldConfigs.get(worldName);
+        }
+        ConfigurationSection config = getConfig().getConfigurationSection("worlds." + worldName);
+        PlotGeneratorConfig info = PlotGeneratorConfig.fromConfig(this, config);
+        if (info != null) {
+            worldConfigs.put(worldName, info);
+        }
+        return info;
     }
 }

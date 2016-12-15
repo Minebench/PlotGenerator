@@ -24,54 +24,28 @@ import org.bukkit.World;
 import org.bukkit.generator.ChunkGenerator;
 
 import java.util.Random;
-import java.util.logging.Level;
 
 public class PlotChunkGenerator extends ChunkGenerator {
 
     private final PlotGenerator plugin;
-
-    private final CuboidClipboard schematic;
-    private final Vector center;
+    private final PlotGeneratorConfig config;
 
     public PlotChunkGenerator() {
         plugin = PlotGenerator.getPlugin(PlotGenerator.class);
-        schematic = null;
-        center = new Vector(0,0,0);
+        config = null;
     }
 
     public PlotChunkGenerator(PlotGenerator plugin, String id) {
-        int z = 0;
-        int y = 0;
-        int x = 0;
         this.plugin = plugin;
-        String args[] = id.split(",");
-
-        if (args.length > 0) {
-            schematic = plugin.loadSchematic(args[0]);
-        } else {
-            schematic = null;
-        }
-
-        if (args.length > 3) {
-            try {
-                x = Integer.parseInt(args[1]);
-                y = Integer.parseInt(args[2]);
-                z = Integer.parseInt(args[3]);
-            } catch (NumberFormatException e) {
-                plugin.getLogger().log(Level.SEVERE, "Can't load center coordinates from " + id + "!", e);
-            }
-        } else {
-            x = 0;
-            y = 0;
-            z = 0;
-        }
-        center = new Vector(x, y, z);
+        config = PlotGeneratorConfig.fromId(plugin, id);
     }
 
     @Override
     public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) {
         ChunkData data = createChunkData(world);
-        if (schematic != null && !Vector.ZERO.equals(schematic.getSize())) {
+        if (getConfig(world) != null && getConfig(world).getSchematic() != null && !Vector.ZERO.equals(getConfig(world).getSchematic().getSize())) {
+            CuboidClipboard schematic = getConfig(world).getSchematic();
+            Vector center = getConfig(world).getCenter();
             int startX = (x * 16 + center.getBlockX()) % schematic.getWidth();
             while (startX < 0) {
                 startX = schematic.getWidth() + startX;
@@ -96,12 +70,22 @@ public class PlotChunkGenerator extends ChunkGenerator {
 
     @Override
     public Location getFixedSpawnLocation(World world, Random random) {
-        Location loc = new Location(world, center.getX(), center.getY(), center.getZ());
+        if (getConfig(world) == null) {
+            return null;
+        }
+        Location loc = new Location(world, getConfig(world).getCenter().getX(), getConfig(world).getCenter().getY(), getConfig(world).getCenter().getZ());
         if (!loc.getChunk().isLoaded()) {
             loc.getChunk().load();
         }
         loc.setY(world.getHighestBlockYAt(loc));
 
         return loc;
+    }
+
+    public PlotGeneratorConfig getConfig(World world) {
+        if (config == null) {
+            return plugin.getGeneratorConfig(world);
+        }
+        return config;
     }
 }
