@@ -48,6 +48,7 @@ public final class PlotGenerator extends JavaPlugin {
     private Map<String, PlotGeneratorConfig> worldConfigs;
     private Set<RegionIntent> regionIntents = new HashSet<>();
     private Map<String, Integer> regionIds = new HashMap<>();
+    private int regionCreatorTask = -1;
 
     @Override
     public void onEnable() {
@@ -138,8 +139,8 @@ public final class PlotGenerator extends JavaPlugin {
     }
 
     public void registerRegionIntent(RegionIntent intent) {
-        if (regionIntents.isEmpty()) {
-            scheduleRegionCreator();
+        if (regionCreatorTask == -1) {
+            regionCreatorTask = scheduleRegionCreator();
         }
         regionIntents.add(intent);
     }
@@ -161,6 +162,7 @@ public final class PlotGenerator extends JavaPlugin {
                     getLogger().log(Level.INFO, "Added new region " + regionId + " at " + intent.getMinPoint() + " " + intent.getMaxPoint());
                 }
             }
+            regionCreatorTask = -1;
         }).getTaskId();
     }
 
