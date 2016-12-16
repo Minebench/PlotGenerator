@@ -41,9 +41,8 @@ import java.util.logging.Level;
 
 public final class PlotGenerator extends JavaPlugin {
 
-    private WorldEditPlugin worldEdit;
-    private WorldGuardPlugin worldGuard;
-    private MbRegionConomy regionConomy;
+    private WorldGuardPlugin worldGuard = null;
+    private MbRegionConomy regionConomy = null;
     private File weSchemDir;
     private Map<String, PlotGeneratorConfig> worldConfigs;
     private Set<RegionIntent> regionIntents = new HashSet<>();
@@ -52,19 +51,13 @@ public final class PlotGenerator extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        worldEdit = WorldEditPlugin.getPlugin(WorldEditPlugin.class);
+        WorldEditPlugin worldEdit = WorldEditPlugin.getPlugin(WorldEditPlugin.class);
         if (!getDataFolder().exists()) {
             getDataFolder().mkdirs();
         }
         weSchemDir = new File(worldEdit.getDataFolder(), "schematics");
         if (!weSchemDir.exists()) {
             weSchemDir.mkdirs();
-        }
-        if (getServer().getPluginManager().isPluginEnabled("WorldGuard")) {
-            worldGuard = WorldGuardPlugin.inst();
-        }
-        if (getServer().getPluginManager().isPluginEnabled("MbRegionConomy")) {
-            regionConomy = MbRegionConomy.getPlugin(MbRegionConomy.class);
         }
         loadConfig();
         getCommand("plotgenerator").setExecutor(new PlotGeneratorCommand(this));
@@ -83,15 +76,17 @@ public final class PlotGenerator extends JavaPlugin {
         return new PlotChunkGenerator(this, id);
     }
 
-    public WorldEditPlugin getWorldEdit() {
-        return worldEdit;
-    }
-
     public WorldGuardPlugin getWorldGuard() {
+        if (worldGuard == null && getServer().getPluginManager().isPluginEnabled("WorldGuard")) {
+            worldGuard = WorldGuardPlugin.inst();
+        }
         return worldGuard;
     }
 
     public MbRegionConomy getRegionConomy() {
+        if (regionConomy == null && getServer().getPluginManager().isPluginEnabled("MbRegionConomy")) {
+            regionConomy = MbRegionConomy.getPlugin(MbRegionConomy.class);
+        }
         return regionConomy;
     }
 
