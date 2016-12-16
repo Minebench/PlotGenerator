@@ -223,7 +223,7 @@ public final class PlotGenerator extends JavaPlugin {
         int i = 0;
         String s1l = string1.toLowerCase();
         String s2l = string2.toLowerCase();
-        while (s1l.startsWith(s2l.substring(0, i)) && i <= s2l.length()) {
+        while (i <= s2l.length() && s1l.startsWith(s2l.substring(0, i))) {
             i++;
         }
         return i;
