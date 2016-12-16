@@ -18,6 +18,7 @@ package de.minebench.plotgenerator;
 
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.CuboidClipboard;
+import com.sk89q.worldedit.Vector;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.logging.Level;
@@ -51,7 +52,7 @@ public class PlotGeneratorConfig {
             return null;
         }
         CuboidClipboard schematic = null;
-        BlockVector center = new BlockVector(0, 0, 0);
+        Vector center = new Vector(0, 0, 0);
         String args[] = id.split(",");
         int overlap = 0;
         String regionId = null;
@@ -80,21 +81,21 @@ public class PlotGeneratorConfig {
                     }
                 } else if ("x".equalsIgnoreCase(parts[0])) {
                     try {
-                        center.setX(Integer.parseInt(parts[1]));
+                        center = center.setX(Integer.parseInt(parts[1]));
                         plugin.getLogger().log(Level.INFO, "Center x: " + center.getBlockX());
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse center x coordinates from " + parts[1] + "!", e);
                     }
                 } else if ("y".equalsIgnoreCase(parts[0])) {
                     try {
-                        center.setY(Integer.parseInt(parts[1]));
+                        center = center.setY(Integer.parseInt(parts[1]));
                         plugin.getLogger().log(Level.INFO, "Center y: " + center.getBlockY());
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse center y coordinates from " + parts[1] + "!", e);
                     }
                 } else if ("z".equalsIgnoreCase(parts[0])) {
                     try {
-                        center.setZ(Integer.parseInt(parts[1]));
+                        center = center.setZ(Integer.parseInt(parts[1]));
                         plugin.getLogger().log(Level.INFO, "Center z: " + center.getBlockZ());
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse center z coordinates from " + parts[1] + "!", e);
@@ -144,7 +145,7 @@ public class PlotGeneratorConfig {
             }
         }
 
-        return new PlotGeneratorConfig(schematic, center, overlap, regionId, regionInset, regionMinY, regionMaxY, landPrice, landPermission);
+        return new PlotGeneratorConfig(schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, landPrice, landPermission);
     }
 
     public static PlotGeneratorConfig fromConfig(PlotGenerator plugin, ConfigurationSection config) {
@@ -155,7 +156,7 @@ public class PlotGeneratorConfig {
         plugin.getLogger().log(Level.INFO, "Loading config " + config.getName());
 
         CuboidClipboard configSchematic = null;
-        BlockVector center = new BlockVector(0, 0, 0);
+        Vector center = new Vector(0, 0, 0);
         int overlap = 0;
         String regionId = null;
         int regionInset = 0;
@@ -184,15 +185,15 @@ public class PlotGeneratorConfig {
         }
 
         if (config.contains("center.x")) {
-            center.setX(config.getInt("center.x"));
+            center = center.setX(config.getInt("center.x"));
             plugin.getLogger().log(Level.INFO, "Center x: " + center.getBlockX());
         }
         if (config.contains("center.y")) {
-            center.setY(config.getInt("center.y"));
+            center = center.setY(config.getInt("center.y"));
             plugin.getLogger().log(Level.INFO, "Center y: " + center.getBlockY());
         }
         if (config.contains("center.z")) {
-            center.setZ(config.getInt("center.z"));
+            center = center.setZ(config.getInt("center.z"));
             plugin.getLogger().log(Level.INFO, "Center z: " + center.getBlockZ());
         }
         if (config.contains("overlap")) {
@@ -232,7 +233,7 @@ public class PlotGeneratorConfig {
             plugin.getLogger().log(Level.INFO, "Schematic: " + config.getString("schematic") + " (size: " + (schematic == null ? "null" : schematic.getSize()) + ")");
         }
 
-        return new PlotGeneratorConfig(schematic, center, overlap, regionId, regionInset, regionMinY, regionMaxY, langPrice, landPermission);
+        return new PlotGeneratorConfig(schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, langPrice, landPermission);
     }
 
     public CuboidClipboard getSchematic() {
