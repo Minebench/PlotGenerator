@@ -195,6 +195,7 @@ public final class PlotGenerator extends JavaPlugin {
             if (intent.getLandPermission() != null && !intent.getLandPermission().isEmpty()) {
                 getRegionConomy().getRegionDatabase().updatePermission(intent.getWorld().getName(), region.getId(), intent.getLandPermission());
             }
+            getLogger().log(Level.INFO, "Made region " + intent.getWorld().getName() + "/" + intent.getRegionId() + " buyable. Price: " + intent.getLandPrice() + (intent.getLandPermission() != null ? ", permission: " + intent.getLandPermission() : ""));
 
             String[] lines = new String[4];
             lines[0] = getRegionConomy().getConf().getSignSell();
@@ -209,6 +210,7 @@ public final class PlotGenerator extends JavaPlugin {
                         sign.setLine(i, lines[i]);
                     }
                     sign.update();
+                    getLogger().log(Level.INFO, "Wrote sign for region " + intent.getWorld().getName() + "/" + intent.getRegionId() + " at " + intent.getLandSign());
                 }
             });
         });
