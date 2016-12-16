@@ -158,7 +158,7 @@ public final class PlotGenerator extends JavaPlugin {
                     String regionId = getNewRegionId(intent);
                     ProtectedCuboidRegion region = new ProtectedCuboidRegion(regionId, intent.getMinPoint(), intent.getMaxPoint());
                     manager.addRegion(region);
-                    getLogger().log(Level.INFO, "Added new region " + regionId + " at " + intent.getMaxPoint() + " " + intent.getMaxPoint());
+                    getLogger().log(Level.INFO, "Added new region " + regionId + " at " + intent.getMinPoint() + " " + intent.getMaxPoint());
                 }
             }
         }).getTaskId();
