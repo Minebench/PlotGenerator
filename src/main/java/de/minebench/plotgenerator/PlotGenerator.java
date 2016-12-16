@@ -224,14 +224,14 @@ public final class PlotGenerator extends JavaPlugin {
     private String getNewRegionId(RegionIntent intent) {
         RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
         String mapKey = intent.getWorld().getName() + "_" + intent.getRegionId();
-        int idNumber = 1;
+        int idNumber = 0;
         if (regionIds.containsKey(mapKey)) {
             idNumber = regionIds.get(mapKey);
-            idNumber++;
         }
 
         String regionName;
         do {
+            idNumber++;
             regionName = intent.getRegionId().replace("%world%", intent.getWorld().getName());
             regionName = regionName.contains("%number%") ? regionName.replace("%number%", String.valueOf(idNumber)) : regionName + idNumber;
         } while (manager.getRegion(regionName) != null);
