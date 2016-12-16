@@ -1,7 +1,13 @@
 worlds:
   test:
     schematic: testschematic
+    overlap: 1
     center:
       x: 0
       y: 0
       z: 0
+    region:
+      name: test_%number%
+      inset: 5
+      min-y: 40
+      max-y: 100

@@ -16,8 +16,8 @@ package de.minebench.plotgenerator;
  * along with this program. If not, see <http://mozilla.org/MPL/2.0/>.
  */
 
+import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.CuboidClipboard;
-import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -43,26 +43,52 @@ public class PlotChunkGenerator extends ChunkGenerator {
     @Override
     public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) {
         ChunkData data = createChunkData(world);
-        if (getConfig(world) != null && getConfig(world).getSchematic() != null && !Vector.ZERO.equals(getConfig(world).getSchematic().getSize())) {
-            CuboidClipboard schematic = getConfig(world).getSchematic();
-            Vector center = getConfig(world).getCenter();
-            int startX = (x * 16 + center.getBlockX()) % schematic.getWidth();
+        PlotGeneratorConfig config = getConfig(world);
+        if (config != null && config.getSchematic() != null && !BlockVector.ZERO.equals(config.getSchematic().getSize())) {
+            CuboidClipboard schematic = config.getSchematic();
+            BlockVector center = config.getCenter();
+            int width = schematic.getWidth() - config.getOverlap();
+            int startX = (x * 16 + center.getBlockX()) % width;
             while (startX < 0) {
                 startX = schematic.getWidth() + startX;
             }
-            int startZ = (z * 16 + center.getBlockZ()) % schematic.getLength();
+            int length = schematic.getLength() - config.getOverlap();
+            int startZ = (z * 16 + center.getBlockZ()) % length;
             while (startZ < 0) {
                 startZ = schematic.getLength() + startZ;
             }
+
+            int regionX = -1;
+            int regionZ = -1;
             for (int chunkX = 0; chunkX < 16; chunkX++) {
                 int schemX = (startX + chunkX) % schematic.getWidth();
+                if (schemX == 0) {
+                    regionX = chunkX;
+                }
                 for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
                     int schemZ = (startZ + chunkZ) % schematic.getLength();
+                    if (schemZ == 0) {
+                        regionZ = schemZ;
+                    }
                     for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
-                        BaseBlock block = schematic.getBlock(new Vector(schemX, chunkY, schemZ));
+                        BaseBlock block = schematic.getBlock(new BlockVector(schemX, chunkY, schemZ));
                         data.setBlock(chunkX, chunkY, chunkZ, block.getId(), (byte) block.getData());
                     }
                 }
+            }
+
+            if (plugin.getWorldGuard() != null && config.getRegionName() != null && regionX != -1 && regionZ != -1) {
+                BlockVector minPoint = new BlockVector(
+                        x * 16 + regionX + config.getRegionInset(),
+                        config.getRegionMinY(),
+                        z * 16 + regionZ + config.getRegionInset()
+                );
+                BlockVector maxPoint = new BlockVector(
+                        minPoint.getBlockX() + schematic.getWidth() - 2 * config.getRegionInset(),
+                        config.getRegionMaxY(),
+                        minPoint.getBlockZ() + schematic.getLength() - 2 * config.getRegionInset()
+                );
+                plugin.registerRegionIntent(new RegionIntent(world, config.getRegionName(), minPoint, maxPoint));
             }
         }
         return data;

@@ -17,9 +17,14 @@ package de.minebench.plotgenerator;
  */
 
 import com.sk89q.worldedit.CuboidClipboard;
+import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.schematic.SchematicFormat;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.ChrisvA.MbRegionConomy.MbRegionConomy;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -28,7 +33,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 public final class PlotGenerator extends JavaPlugin {
@@ -38,6 +46,8 @@ public final class PlotGenerator extends JavaPlugin {
     private MbRegionConomy regionConomy;
     private File weSchemDir;
     private Map<String, PlotGeneratorConfig> worldConfigs;
+    private Set<RegionIntent> regionIntents = new HashSet<>();
+    private Map<String, Integer> regionIds = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -126,4 +136,97 @@ public final class PlotGenerator extends JavaPlugin {
         }
         return info;
     }
+
+    public void registerRegionIntent(RegionIntent intent) {
+        if (regionIntents.isEmpty()) {
+            scheduleRegionCreator();
+        }
+        regionIntents.add(intent);
+    }
+
+    private int scheduleRegionCreator() {
+        return getServer().getScheduler().runTask(this, () -> {
+            Iterator<RegionIntent> intents = regionIntents.iterator();
+            while (intents.hasNext()) {
+                RegionIntent intent = intents.next();
+                intents.remove();
+                if (getWorldGuard() != null) {
+                    RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
+                    if (testForRegion(intent)) {
+                        continue;
+                    }
+                    String regionId = getNewRegionId(intent);
+                    ProtectedCuboidRegion region = new ProtectedCuboidRegion(regionId, intent.getMinPoint(), intent.getMaxPoint());
+                    manager.addRegion(region);
+                    getLogger().log(Level.INFO, "Added new region " + regionId + " at " + intent.getMaxPoint() + " " + intent.getMaxPoint());
+                }
+            }
+        }).getTaskId();
+    }
+
+    /**
+     * Get a new region id that hasn't been registered with worldguard yet
+     * @return
+     */
+    private String getNewRegionId(RegionIntent intent) {
+        RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
+        String mapKey = intent.getWorld().getName() + "_" + intent.getRegionName();
+        int idNumber = 1;
+        if (regionIds.containsKey(mapKey)) {
+            idNumber = regionIds.get(mapKey);
+            idNumber++;
+        }
+
+        String regionName;
+        do {
+            regionName = intent.getRegionName().replace("%world%", intent.getWorld().getName());
+            regionName = regionName.contains("%number%") ? regionName.replace("%number%", String.valueOf(idNumber)) : regionName + idNumber;
+        } while (manager.getRegion(regionName) != null);
+
+        regionIds.put(mapKey, idNumber);
+        return regionName;
+    }
+
+    /**
+     * Test whether or not there already is a similar region
+     * @param intent
+     * @return
+     */
+    private boolean testForRegion(RegionIntent intent) {
+        RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
+        String replacedRegionName = intent.getRegionName().replace("%world%", "").replace("%number%", "");
+        ApplicableRegionSet minPointRegions = manager.getApplicableRegions(intent.getMinPoint());
+        for (ProtectedRegion region : minPointRegions.getRegions()) {
+            if (getStartSimilarity(region.getId(), replacedRegionName) > replacedRegionName.length() / 2) {
+                return true;
+            }
+        }
+        ApplicableRegionSet maxPointRegions = manager.getApplicableRegions(intent.getMaxPoint());
+        for (ProtectedRegion region : maxPointRegions.getRegions()) {
+            if (getStartSimilarity(region.getId(), replacedRegionName) > replacedRegionName.length() / 2) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check how similar the starts two strings
+     * @param string1
+     * @param string2
+     * @return The length that matches
+     */
+    private int getStartSimilarity(String string1, String string2) {
+        if (string1.equalsIgnoreCase(string2)) {
+            return string1.length();
+        }
+        int i = 0;
+        String s1l = string1.toLowerCase();
+        String s2l = string2.toLowerCase();
+        while (s1l.startsWith(s2l.substring(0, i)) && i <= s2l.length()) {
+            i++;
+        }
+        return i;
+    }
+
 }
