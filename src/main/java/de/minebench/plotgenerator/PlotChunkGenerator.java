@@ -49,12 +49,12 @@ public class PlotChunkGenerator extends ChunkGenerator {
             CuboidClipboard schematic = config.getSchematic();
             BlockVector center = config.getCenter();
             int width = schematic.getWidth() - config.getOverlap();
-            int startX = (x * 16 + center.getBlockX()) % width;
+            int startX = (x * 16 - center.getBlockX()) % width;
             while (startX < 0) {
                 startX = width + startX;
             }
             int length = schematic.getLength() - config.getOverlap();
-            int startZ = (z * 16 + center.getBlockZ()) % length;
+            int startZ = (z * 16 - center.getBlockZ()) % length;
             while (startZ < 0) {
                 startZ = length + startZ;
             }
