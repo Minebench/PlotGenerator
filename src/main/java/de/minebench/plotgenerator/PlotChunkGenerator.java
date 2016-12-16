@@ -50,19 +50,19 @@ public class PlotChunkGenerator extends ChunkGenerator {
             int width = schematic.getWidth() - config.getOverlap();
             int startX = (x * 16 + center.getBlockX()) % width;
             while (startX < 0) {
-                startX = schematic.getWidth() + startX;
+                startX = width + startX;
             }
             int length = schematic.getLength() - config.getOverlap();
             int startZ = (z * 16 + center.getBlockZ()) % length;
             while (startZ < 0) {
-                startZ = schematic.getLength() + startZ;
+                startZ = length + startZ;
             }
 
             for (int chunkX = 0; chunkX < 16; chunkX++) {
-                int schemX = (startX + chunkX) % schematic.getWidth();
+                int schemX = (startX + chunkX) % width;
                 for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
-                    int schemZ = (startZ + chunkZ) % schematic.getLength();
-                    for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
+                    int schemZ = (startZ + chunkZ) % length;
+                    for (int chunkY = 0; chunkY <= schematic.getHeight(); chunkY++) {
                         BaseBlock block = schematic.getBlock(new BlockVector(schemX, chunkY, schemZ));
                         data.setBlock(chunkX, chunkY, chunkZ, block.getId(), (byte) block.getData());
                     }
@@ -76,9 +76,9 @@ public class PlotChunkGenerator extends ChunkGenerator {
                         z * 16 - startZ + config.getRegionInset()
                 );
                 BlockVector maxPoint = new BlockVector(
-                        minPoint.getBlockX() + schematic.getWidth() - 2 * config.getRegionInset(),
+                        minPoint.getBlockX() + width - 2 * config.getRegionInset(),
                         config.getRegionMaxY(),
-                        minPoint.getBlockZ() + schematic.getLength() - 2 * config.getRegionInset()
+                        minPoint.getBlockZ() + length - 2 * config.getRegionInset()
                 );
                 plugin.registerRegionIntent(new RegionIntent(world, config.getRegionName(), minPoint, maxPoint));
             }
