@@ -147,9 +147,9 @@ public final class PlotGenerator extends JavaPlugin {
 
     private int scheduleRegionCreator() {
         return getServer().getScheduler().runTask(this, () -> {
-            Iterator<RegionIntent> intents = regionIntents.keySet().iterator();
+            Iterator<Map.Entry<RegionIntent, Boolean>> intents = regionIntents.entrySet().iterator();
             while (intents.hasNext()) {
-                RegionIntent intent = intents.next();
+                RegionIntent intent = intents.next().getKey();
                 intents.remove();
                 if (getWorldGuard() != null) {
                     RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
