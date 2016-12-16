@@ -26,7 +26,6 @@ import com.sk89q.worldedit.schematic.SchematicFormat;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.DefaultFlag;
-import com.sk89q.worldguard.protection.flags.InvalidFlagFormat;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -40,10 +39,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public final class PlotGenerator extends JavaPlugin {
@@ -52,7 +50,7 @@ public final class PlotGenerator extends JavaPlugin {
     private MbRegionConomy regionConomy = null;
     private File weSchemDir;
     private Map<String, PlotGeneratorConfig> worldConfigs;
-    private Set<RegionIntent> regionIntents = new HashSet<>();
+    private Map<RegionIntent, Boolean> regionIntents = new ConcurrentHashMap<>();
     private Map<String, Integer> regionIds = new HashMap<>();
     private int regionCreatorTask = -1;
 
@@ -144,12 +142,12 @@ public final class PlotGenerator extends JavaPlugin {
         if (regionCreatorTask == -1) {
             regionCreatorTask = scheduleRegionCreator();
         }
-        regionIntents.add(intent);
+        regionIntents.put(intent, true);
     }
 
     private int scheduleRegionCreator() {
         return getServer().getScheduler().runTask(this, () -> {
-            Iterator<RegionIntent> intents = regionIntents.iterator();
+            Iterator<RegionIntent> intents = regionIntents.keySet().iterator();
             while (intents.hasNext()) {
                 RegionIntent intent = intents.next();
                 intents.remove();
