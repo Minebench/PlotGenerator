@@ -58,18 +58,10 @@ public class PlotChunkGenerator extends ChunkGenerator {
                 startZ = schematic.getLength() + startZ;
             }
 
-            int regionX = -1;
-            int regionZ = -1;
             for (int chunkX = 0; chunkX < 16; chunkX++) {
                 int schemX = (startX + chunkX) % schematic.getWidth();
-                if (schemX == 0) {
-                    regionX = chunkX;
-                }
                 for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
                     int schemZ = (startZ + chunkZ) % schematic.getLength();
-                    if (schemZ == 0) {
-                        regionZ = schemZ;
-                    }
                     for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
                         BaseBlock block = schematic.getBlock(new BlockVector(schemX, chunkY, schemZ));
                         data.setBlock(chunkX, chunkY, chunkZ, block.getId(), (byte) block.getData());
@@ -77,11 +69,11 @@ public class PlotChunkGenerator extends ChunkGenerator {
                 }
             }
 
-            if (plugin.getWorldGuard() != null && config.getRegionName() != null && regionX != -1 && regionZ != -1) {
+            if (plugin.getWorldGuard() != null && config.getRegionName() != null) {
                 BlockVector minPoint = new BlockVector(
-                        x * 16 + regionX + config.getRegionInset(),
+                        x * 16 - startX + config.getRegionInset(),
                         config.getRegionMinY(),
-                        z * 16 + regionZ + config.getRegionInset()
+                        z * 16 - startZ + config.getRegionInset()
                 );
                 BlockVector maxPoint = new BlockVector(
                         minPoint.getBlockX() + schematic.getWidth() - 2 * config.getRegionInset(),
