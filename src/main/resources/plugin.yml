@@ -1,6 +1,7 @@
 name: ${project.name}
 version: '${minecraft.plugin.version}'
 main: de.minebench.plotgenerator.PlotGenerator
+load: STARTUP
 depend: [WorldEdit]
 softdepend: [MbRegionConomy,WorldGuard]
 authors: [Phoenix616]
