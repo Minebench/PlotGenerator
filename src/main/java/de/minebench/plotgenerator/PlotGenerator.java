@@ -183,7 +183,9 @@ public final class PlotGenerator extends JavaPlugin {
 
         getServer().getScheduler().runTaskAsynchronously(this, () -> {
             getRegionConomy().getRegionDatabase().insertRegion(intent.getWorld().getName(), region.getId(), intent.getLandPrice());
-            getRegionConomy().getRegionDatabase().updatePermission(intent.getWorld().getName(), region.getId(), intent.getLandPermission());
+            if (intent.getLandPermission() != null && !intent.getLandPermission().isEmpty()) {
+                getRegionConomy().getRegionDatabase().updatePermission(intent.getWorld().getName(), region.getId(), intent.getLandPermission());
+            }
 
             String[] lines = new String[4];
             lines[0] = getRegionConomy().getConf().getSignSell();
