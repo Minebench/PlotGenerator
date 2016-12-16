@@ -18,10 +18,15 @@ package de.minebench.plotgenerator;
 
 import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.CuboidClipboard;
+import com.sk89q.worldedit.Location;
+import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.schematic.SchematicFormat;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.flags.InvalidFlagFormat;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -158,6 +163,12 @@ public final class PlotGenerator extends JavaPlugin {
                     }
                     String regionId = getNewRegionId(intent);
                     ProtectedCuboidRegion region = new ProtectedCuboidRegion(regionId, intent.getMinPoint(), intent.getMaxPoint());
+
+                    double tpX = region.getMinimumPoint().getX() + (region.getMaximumPoint().getX() - region.getMinimumPoint().getX()) / 2;
+                    double tpZ = region.getMaximumPoint().getZ();
+                    double tpY = intent.getWorld().getHighestBlockYAt((int) tpX, (int) tpZ) + 1;
+                    region.setFlag(DefaultFlag.TELE_LOC, new Location(BukkitUtil.getLocalWorld(intent.getWorld()), new Vector(tpX,tpY,tpZ), 180, 0));
+
                     manager.addRegion(region);
                     getLogger().log(Level.INFO, "Added new region " + regionId + " at " + intent.getMinPoint() + " " + intent.getMaxPoint());
                     if (intent.getLandSign() != null) {
