@@ -16,8 +16,8 @@ package de.minebench.plotgenerator;
  * along with this program. If not, see <http://mozilla.org/MPL/2.0/>.
  */
 
+import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.CuboidClipboard;
-import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.schematic.SchematicFormat;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
@@ -27,6 +27,8 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import me.ChrisvA.MbRegionConomy.MbRegionConomy;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -149,16 +151,56 @@ public final class PlotGenerator extends JavaPlugin {
                 if (getWorldGuard() != null) {
                     RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
                     if (testForRegion(intent)) {
+                        if (intent.getLandSign() != null) {
+                            registerRegionConomySign(intent);
+                        }
                         continue;
                     }
                     String regionId = getNewRegionId(intent);
                     ProtectedCuboidRegion region = new ProtectedCuboidRegion(regionId, intent.getMinPoint(), intent.getMaxPoint());
                     manager.addRegion(region);
                     getLogger().log(Level.INFO, "Added new region " + regionId + " at " + intent.getMinPoint() + " " + intent.getMaxPoint());
+                    if (intent.getLandSign() != null) {
+                        registerRegionConomySign(intent);
+                    }
                 }
             }
             regionCreatorTask = -1;
         }).getTaskId();
+    }
+
+    private void registerRegionConomySign(RegionIntent intent) {
+        if (getRegionConomy() == null || getWorldGuard() == null || intent.getLandPrice() < 0) {
+            return;
+        }
+
+        ProtectedRegion region = getSimilarRegion(intent, intent.getLandSign());
+
+        if (region == null) {
+            getLogger().log(Level.WARNING, "Sign was found at " + intent.getLandSign() + " but no region?");
+            return;
+        }
+
+        getServer().getScheduler().runTaskAsynchronously(this, () -> {
+            getRegionConomy().getRegionDatabase().insertRegion(intent.getWorld().getName(), region.getId(), intent.getLandPrice());
+            getRegionConomy().getRegionDatabase().updatePermission(intent.getWorld().getName(), region.getId(), intent.getLandPermission());
+
+            String[] lines = new String[4];
+            lines[0] = getRegionConomy().getConf().getSignSell();
+            lines[1] = intent.getRegionId();
+            lines[2] = String.valueOf(intent.getLandPrice());
+            lines[3] = intent.getLandPermission();
+            getServer().getScheduler().runTask(this, () -> {
+                Block block = intent.getWorld().getBlockAt(intent.getLandSign().getBlockX(), intent.getLandSign().getBlockY(), intent.getLandSign().getBlockZ());
+                if (block.getState() instanceof Sign) {
+                    Sign sign = (Sign) block.getState();
+                    for (int i = 0; i < lines.length; i++) {
+                        sign.setLine(i, lines[i]);
+                    }
+                    sign.update();
+                }
+            });
+        });
     }
 
     /**
@@ -167,7 +209,7 @@ public final class PlotGenerator extends JavaPlugin {
      */
     private String getNewRegionId(RegionIntent intent) {
         RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
-        String mapKey = intent.getWorld().getName() + "_" + intent.getRegionName();
+        String mapKey = intent.getWorld().getName() + "_" + intent.getRegionId();
         int idNumber = 1;
         if (regionIds.containsKey(mapKey)) {
             idNumber = regionIds.get(mapKey);
@@ -176,7 +218,7 @@ public final class PlotGenerator extends JavaPlugin {
 
         String regionName;
         do {
-            regionName = intent.getRegionName().replace("%world%", intent.getWorld().getName());
+            regionName = intent.getRegionId().replace("%world%", intent.getWorld().getName());
             regionName = regionName.contains("%number%") ? regionName.replace("%number%", String.valueOf(idNumber)) : regionName + idNumber;
         } while (manager.getRegion(regionName) != null);
 
@@ -190,21 +232,24 @@ public final class PlotGenerator extends JavaPlugin {
      * @return
      */
     private boolean testForRegion(RegionIntent intent) {
+        return getSimilarRegion(intent, intent.getMinPoint()) != null || getSimilarRegion(intent, intent.getMaxPoint()) != null;
+    }
+
+    /**
+     * Get a region at that location that is similar to the intent
+     * @param intent
+     * @return
+     */
+    private ProtectedRegion getSimilarRegion(RegionIntent intent, BlockVector loc) {
+        String replacedRegionName = intent.getRegionId().replace("%world%", "").replace("%number%", "");
         RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
-        String replacedRegionName = intent.getRegionName().replace("%world%", "").replace("%number%", "");
-        ApplicableRegionSet minPointRegions = manager.getApplicableRegions(intent.getMinPoint());
-        for (ProtectedRegion region : minPointRegions.getRegions()) {
+        ApplicableRegionSet regions = manager.getApplicableRegions(loc);
+        for (ProtectedRegion region : regions) {
             if (getStartSimilarity(region.getId(), replacedRegionName) > replacedRegionName.length() / 2) {
-                return true;
+                return region;
             }
         }
-        ApplicableRegionSet maxPointRegions = manager.getApplicableRegions(intent.getMaxPoint());
-        for (ProtectedRegion region : maxPointRegions.getRegions()) {
-            if (getStartSimilarity(region.getId(), replacedRegionName) > replacedRegionName.length() / 2) {
-                return true;
-            }
-        }
-        return false;
+        return null;
     }
 
     /**
@@ -225,5 +270,4 @@ public final class PlotGenerator extends JavaPlugin {
         }
         return i;
     }
-
 }

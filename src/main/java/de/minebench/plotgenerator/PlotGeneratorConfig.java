@@ -27,19 +27,23 @@ public class PlotGeneratorConfig {
     private final CuboidClipboard schematic;
     private final BlockVector center;
     private final int overlap;
-    private final String regionName;
+    private final String regionId;
     private final int regionInset;
     private final int regionMinY;
     private final int regionMaxY;
+    private final double landPrice;
+    private final String landPermission;
 
-    public PlotGeneratorConfig(CuboidClipboard schematic, BlockVector center, int overlap, String regionName, int regionInset, int regionMinY, int regionMaxY) {
+    public PlotGeneratorConfig(CuboidClipboard schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double landPrice, String landPermission) {
         this.schematic = schematic;
         this.center = center;
         this.overlap = overlap;
-        this.regionName = regionName;
+        this.regionId = regionId;
         this.regionInset = regionInset;
         this.regionMinY = regionMinY;
         this.regionMaxY = regionMaxY;
+        this.landPrice = landPrice;
+        this.landPermission = landPermission;
     }
 
     public static PlotGeneratorConfig fromId(PlotGenerator plugin, String id) {
@@ -50,10 +54,12 @@ public class PlotGeneratorConfig {
         BlockVector center = new BlockVector(0, 0, 0);
         String args[] = id.split(",");
         int overlap = 0;
-        String regionName = null;
+        String regionId = null;
         int regionInset = 0;
         int regionMinY = 0;
         int regionMaxY = 255;
+        double landPrice = -1;
+        String landPermission = null;
 
         for (String arg : args) {
             if (!arg.contains("=")) {
@@ -100,9 +106,9 @@ public class PlotGeneratorConfig {
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse overlap from " + parts[1] + "!", e);
                     }
-                } else if ("regionName".equalsIgnoreCase(parts[0])) {
-                    regionName = parts[1];
-                    plugin.getLogger().log(Level.INFO, "Region name: " + regionName);
+                } else if ("regionId".equalsIgnoreCase(parts[0])) {
+                    regionId = parts[1];
+                    plugin.getLogger().log(Level.INFO, "Region id: " + regionId);
                 } else if ("regionInset".equalsIgnoreCase(parts[0])) {
                     try {
                         regionInset = Integer.parseInt(parts[1]);
@@ -124,11 +130,21 @@ public class PlotGeneratorConfig {
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse region max y from " + parts[1] + "!", e);
                     }
+                } else if ("landPrice".equalsIgnoreCase(parts[0])) {
+                    try {
+                        landPrice = Double.parseDouble(parts[1]);
+                        plugin.getLogger().log(Level.INFO, "MbRegionConomy land price: " + landPrice);
+                    } catch (NumberFormatException e) {
+                        plugin.getLogger().log(Level.SEVERE, "Can't parse land price from " + parts[1] + "!", e);
+                    }
+                } else if ("landPermission".equalsIgnoreCase(parts[0])) {
+                    landPermission = parts[1];
+                    plugin.getLogger().log(Level.INFO, "MbRegionConomy land permission: " + regionInset);
                 }
             }
         }
 
-        return new PlotGeneratorConfig(schematic, center, overlap, regionName, regionInset, regionMinY, regionMaxY);
+        return new PlotGeneratorConfig(schematic, center, overlap, regionId, regionInset, regionMinY, regionMaxY, landPrice, landPermission);
     }
 
     public static PlotGeneratorConfig fromConfig(PlotGenerator plugin, ConfigurationSection config) {
@@ -141,10 +157,12 @@ public class PlotGeneratorConfig {
         CuboidClipboard configSchematic = null;
         BlockVector center = new BlockVector(0, 0, 0);
         int overlap = 0;
-        String regionName = null;
+        String regionId = null;
         int regionInset = 0;
         int regionMinY = 0;
         int regionMaxY = 255;
+        double langPrice = -1;
+        String landPermission = null;
 
         if (config.contains("config")) {
             String configName = config.getString("config");
@@ -153,10 +171,12 @@ public class PlotGeneratorConfig {
                 configSchematic = genConfig.getSchematic();
                 center = genConfig.getCenter();
                 overlap = genConfig.getOverlap();
-                regionName = genConfig.getRegionName();
+                regionId = genConfig.getRegionId();
                 regionInset = genConfig.getRegionInset();
                 regionMinY = genConfig.getRegionMinY();
                 regionMaxY = genConfig.getRegionMaxY();
+                langPrice = genConfig.getLandPrice();
+                landPermission = genConfig.getLandPermission();
                 plugin.getLogger().log(Level.INFO, "Using config " + configName);
             } else {
                 plugin.getLogger().log(Level.WARNING, "Config " + configName + " not found?");
@@ -179,9 +199,9 @@ public class PlotGeneratorConfig {
             overlap = config.getInt("overlap");
             plugin.getLogger().log(Level.INFO, "Overlap: " + overlap);
         }
-        if (config.contains("region.name")) {
-            regionName = config.getString("region.name");
-            plugin.getLogger().log(Level.INFO, "Region name: " + regionName);
+        if (config.contains("region.id")) {
+            regionId = config.getString("region.id");
+            plugin.getLogger().log(Level.INFO, "Region id: " + regionId);
         }
         if (config.contains("region.inset")) {
             regionInset = config.getInt("region.inset");
@@ -195,6 +215,14 @@ public class PlotGeneratorConfig {
             regionMaxY = config.getInt("region.max-y");
             plugin.getLogger().log(Level.INFO, "Region max y: " + regionMaxY);
         }
+        if (config.contains("land.price")) {
+            langPrice = config.getDouble("land.price");
+            plugin.getLogger().log(Level.INFO, "MbRegionConomy land price: " + langPrice);
+        }
+        if (config.contains("land.permission")) {
+            landPermission = config.getString("land.permission");
+            plugin.getLogger().log(Level.INFO, "MbRegionConomy land permission: " + landPermission);
+        }
 
         CuboidClipboard schematic = config.contains("schematic") ? plugin.loadSchematic(config.getString("schematic")) : null;
         if (schematic == null) {
@@ -204,7 +232,7 @@ public class PlotGeneratorConfig {
             plugin.getLogger().log(Level.INFO, "Schematic: " + config.getString("schematic") + " (size: " + (schematic == null ? "null" : schematic.getSize()) + ")");
         }
 
-        return new PlotGeneratorConfig(schematic, center, overlap, regionName, regionInset, regionMinY, regionMaxY);
+        return new PlotGeneratorConfig(schematic, center, overlap, regionId, regionInset, regionMinY, regionMaxY, langPrice, landPermission);
     }
 
     public CuboidClipboard getSchematic() {
@@ -219,8 +247,8 @@ public class PlotGeneratorConfig {
         return overlap;
     }
 
-    public String getRegionName() {
-        return regionName;
+    public String getRegionId() {
+        return regionId;
     }
 
     public int getRegionInset() {
@@ -233,5 +261,13 @@ public class PlotGeneratorConfig {
 
     public int getRegionMaxY() {
         return regionMaxY;
+    }
+
+    public double getLandPrice() {
+        return landPrice;
+    }
+
+    public String getLandPermission() {
+        return landPermission;
     }
 }

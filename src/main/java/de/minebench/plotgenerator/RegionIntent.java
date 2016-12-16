@@ -17,18 +17,20 @@ package de.minebench.plotgenerator;
  */
 
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.Vector;
 import org.bukkit.World;
 
 class RegionIntent {
     private final World world;
-    private final String regionName;
+    private final String regionId;
     private final BlockVector minPoint;
     private final BlockVector maxPoint;
+    private BlockVector landSign = null;
+    private double landPrice = - 1;
+    private String landPermission = "";
 
-    public RegionIntent(World world, String regionName, BlockVector minPoint, BlockVector maxPoint) {
+    public RegionIntent(World world, String regionId, BlockVector minPoint, BlockVector maxPoint) {
         this.world = world;
-        this.regionName = regionName;
+        this.regionId = regionId;
         this.minPoint = minPoint;
         this.maxPoint = maxPoint;
     }
@@ -37,8 +39,8 @@ class RegionIntent {
         return world;
     }
 
-    public String getRegionName() {
-        return regionName;
+    public String getRegionId() {
+        return regionId;
     }
 
     public BlockVector getMinPoint() {
@@ -51,11 +53,35 @@ class RegionIntent {
 
     @Override
     public String toString() {
-        return "RegionIntent{world=" + world.getName() + ",regionName=" + regionName + ",minPoint=" + minPoint + ",maxPoint=" + maxPoint + "}";
+        return "RegionIntent{world=" + world.getName() + ",regionId=" + regionId + ",minPoint=" + minPoint + ",maxPoint=" + maxPoint + ",landSign=" + landSign + ",landPrice=" + landPrice + ",landPermission=" + landPermission + "}";
     }
 
     @Override
     public int hashCode() {
         return toString().hashCode();
+    }
+
+    public void setLandSign(BlockVector regionConomySign) {
+        this.landSign = regionConomySign;
+    }
+
+    public BlockVector getLandSign() {
+        return landSign;
+    }
+
+    public void setLandPrice(double landPrice) {
+        this.landPrice = landPrice;
+    }
+
+    public double getLandPrice() {
+        return landPrice;
+    }
+
+    public void setLandPermission(String landPermission) {
+        this.landPermission = landPermission;
+    }
+
+    public String getLandPermission() {
+        return landPermission;
     }
 }

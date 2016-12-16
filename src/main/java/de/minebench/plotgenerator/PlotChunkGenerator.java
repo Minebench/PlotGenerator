@@ -20,6 +20,7 @@ import com.sk89q.worldedit.BlockVector;
 import com.sk89q.worldedit.CuboidClipboard;
 import com.sk89q.worldedit.blocks.BaseBlock;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.generator.ChunkGenerator;
 
@@ -58,6 +59,7 @@ public class PlotChunkGenerator extends ChunkGenerator {
                 startZ = length + startZ;
             }
 
+            BlockVector sign = null;
             for (int chunkX = 0; chunkX < 16; chunkX++) {
                 int schemX = (startX + chunkX) % width;
                 for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
@@ -65,11 +67,14 @@ public class PlotChunkGenerator extends ChunkGenerator {
                     for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
                         BaseBlock block = schematic.getBlock(new BlockVector(schemX, chunkY, schemZ));
                         data.setBlock(chunkX, chunkY, chunkZ, block.getId(), (byte) block.getData());
+                        if (sign == null && block.getId() == Material.SIGN_POST.getId() || block.getId() == Material.WALL_SIGN.getId()) {
+                            sign = new BlockVector(x * 16 + chunkX, chunkY, z * 16 + chunkZ);
+                        }
                     }
                 }
             }
 
-            if (plugin.getWorldGuard() != null && config.getRegionName() != null) {
+            if (plugin.getWorldGuard() != null && config.getRegionId() != null) {
                 BlockVector minPoint = new BlockVector(
                         x * 16 - startX + config.getRegionInset(),
                         config.getRegionMinY(),
@@ -80,7 +85,13 @@ public class PlotChunkGenerator extends ChunkGenerator {
                         config.getRegionMaxY(),
                         minPoint.getBlockZ() + length - 2 * config.getRegionInset()
                 );
-                plugin.registerRegionIntent(new RegionIntent(world, config.getRegionName(), minPoint, maxPoint));
+                RegionIntent intent = new RegionIntent(world, config.getRegionId(), minPoint, maxPoint);
+                if (sign != null && plugin.getRegionConomy() != null) {
+                    intent.setLandSign(sign);
+                    intent.setLandPrice(config.getLandPrice());
+                    intent.setLandPermission(config.getLandPermission());
+                }
+                plugin.registerRegionIntent(intent);
             }
         }
         return data;
