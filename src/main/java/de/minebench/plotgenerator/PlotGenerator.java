@@ -199,7 +199,7 @@ public final class PlotGenerator extends JavaPlugin {
 
             String[] lines = new String[4];
             lines[0] = getRegionConomy().getConf().getSignSell();
-            lines[1] = intent.getRegionId();
+            lines[1] = region.getId();
             lines[2] = String.valueOf(intent.getLandPrice());
             lines[3] = intent.getLandPermission();
             getServer().getScheduler().runTask(this, () -> {
