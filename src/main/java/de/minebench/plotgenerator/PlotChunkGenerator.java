@@ -62,7 +62,7 @@ public class PlotChunkGenerator extends ChunkGenerator {
                 int schemX = (startX + chunkX) % width;
                 for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
                     int schemZ = (startZ + chunkZ) % length;
-                    for (int chunkY = 0; chunkY <= schematic.getHeight(); chunkY++) {
+                    for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
                         BaseBlock block = schematic.getBlock(new BlockVector(schemX, chunkY, schemZ));
                         data.setBlock(chunkX, chunkY, chunkZ, block.getId(), (byte) block.getData());
                     }
