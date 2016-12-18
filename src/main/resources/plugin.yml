@@ -3,15 +3,21 @@ version: '${minecraft.plugin.version}'
 main: de.minebench.plotgenerator.PlotGenerator
 load: STARTUP
 depend: [WorldEdit]
-softdepend: [MbRegionConomy,WorldGuard]
+softdepend: [MbRegionConomy,WorldGuard,Vault]
 authors: [Phoenix616]
 description: ${project.description}
 commands:
    plotgenerator:
       aliases: [plotgen]
       description: Main plugin command
-      usage: /<command> [reload]
+      usage: /<command> [buy <id>|reload]
       permission: plotgenerator.command
+      permission-message: You don't have the permission <permission>
+   buyplot:
+      aliases: [buy]
+      description: Command to buy plots
+      usage: /<command> [<id>]
+      permission: plotgenerator.command.buy
       permission-message: You don't have the permission <permission>
 permissions:
    plotgenerator.command:
@@ -20,3 +26,9 @@ permissions:
    plotgenerator.command.reload:
       description: Gives permission to reload the plugin
       default: op
+   plotgenerator.command.buy:
+      description: Gives permission to reload the plugin
+      default: false
+   plotgenerator.command.buy.byregionid:
+      description: Gives permission to buy a region by a specify region id (/plotby <id>)
+      default: false

@@ -1,0 +1,101 @@
+package de.minebench.plotgenerator.commands;
+
+/*
+ * Copyright 2016 Max Lee (https://github.com/Phoenix616/)
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Mozilla Public License as published by
+ * the Mozilla Foundation, version 2.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Mozilla Public License v2.0 for more details.
+ * 
+ * You should have received a copy of the Mozilla Public License v2.0
+ * along with this program. If not, see <http://mozilla.org/MPL/2.0/>.
+ */
+
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import de.minebench.plotgenerator.PlotGenerator;
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+public class BuyPlotCommand implements CommandExecutor {
+    private final PlotGenerator plugin;
+
+    public BuyPlotCommand(PlotGenerator plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.RED + "This command can only be executed by a player!");
+            return true;
+        }
+
+        if (plugin.getWorldGuard() == null) {
+            sender.sendMessage(ChatColor.RED + "WorldGuard is not installed!");
+            return true;
+        }
+
+        if (plugin.getEconomy() == null) {
+            sender.sendMessage(ChatColor.RED + "Vault is not installed!");
+            return true;
+        }
+
+        Player player = (Player) sender;
+
+        ProtectedRegion region = null;
+
+        if (args.length > 0) {
+            String cmdPerm = command.getPermission();
+            command.setPermission(cmdPerm + ".byregionid");
+            if (command.testPermission(sender)) {
+                ProtectedRegion r = plugin.getWorldGuard().getRegionManager(player.getWorld()).getRegion(args[0]);
+                if (r == null) {
+                    sender.sendMessage(ChatColor.RED + "No region found with the id " + ChatColor.YELLOW + args[0]);
+                } else if (r.getFlag(DefaultFlag.BUYABLE) != null && r.getFlag(DefaultFlag.BUYABLE) && r.getFlag(DefaultFlag.PRICE) != null && r.getFlag(DefaultFlag.PRICE) > 0) {
+                    region = r;
+                } else {
+                    sender.sendMessage(ChatColor.RED + "The region " + ChatColor.YELLOW + args[0] + ChatColor.RED + " is not buyable!");
+                }
+            }
+            command.setPermission(cmdPerm);
+        } else {
+            ApplicableRegionSet regions = plugin.getWorldGuard().getRegionManager(player.getWorld()).getApplicableRegions(player.getLocation());
+            for (ProtectedRegion r : regions.getRegions()) {
+                if (r.getFlag(DefaultFlag.BUYABLE) != null && r.getFlag(DefaultFlag.BUYABLE) && r.getFlag(DefaultFlag.PRICE) != null && r.getFlag(DefaultFlag.PRICE) > 0) {
+                    region = r;
+                }
+            }
+            if (region == null) {
+                sender.sendMessage(ChatColor.RED + "No buyable region found at your current location!");
+            }
+        }
+
+        if (region == null) {
+            return true;
+        }
+
+        double price = region.getFlag(DefaultFlag.PRICE);
+        EconomyResponse response = plugin.getEconomy().withdrawPlayer(player, price);
+        if (response.transactionSuccess()) {
+            region.setFlag(DefaultFlag.BUYABLE, false);
+            region.getOwners().clear();
+            region.getOwners().addPlayer(player.getUniqueId());
+            region.getMembers().clear();
+            sender.sendMessage(ChatColor.GREEN + "You bought the plot " + region.getId() + " for " + price + "!");
+        } else {
+            sender.sendMessage(ChatColor.RED + "Cannot buy plot! " + response.errorMessage);
+        }
+        return true;
+    }
+}

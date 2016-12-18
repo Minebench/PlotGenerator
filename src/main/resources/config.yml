@@ -10,6 +10,7 @@ worlds:
       inset: 5 # How far away from the schematics border the region should start, use 0 to protect the whole schematic
       min-y: 40 # The lower end of the region
       max-y: 100 # The upper end of the region
+      price: 50 # Sets the buyable and the price flag
   mb_plotworld:
     config: test # Use the settings of world test
     schematic: plot # but use the schematic plot

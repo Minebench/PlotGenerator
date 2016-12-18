@@ -32,10 +32,11 @@ public class PlotGeneratorConfig {
     private final int regionInset;
     private final int regionMinY;
     private final int regionMaxY;
+    private final double regionPrice;
     private final double landPrice;
     private final String landPermission;
 
-    public PlotGeneratorConfig(CuboidClipboard schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double landPrice, String landPermission) {
+    public PlotGeneratorConfig(CuboidClipboard schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, double landPrice, String landPermission) {
         this.schematic = schematic;
         this.center = center;
         this.overlap = overlap;
@@ -43,6 +44,7 @@ public class PlotGeneratorConfig {
         this.regionInset = regionInset;
         this.regionMinY = regionMinY;
         this.regionMaxY = regionMaxY;
+        this.regionPrice = regionPrice;
         this.landPrice = landPrice;
         this.landPermission = landPermission;
     }
@@ -59,6 +61,7 @@ public class PlotGeneratorConfig {
         int regionInset = 0;
         int regionMinY = 0;
         int regionMaxY = 255;
+        double regionPrice = -1;
         double landPrice = -1;
         String landPermission = null;
 
@@ -131,6 +134,13 @@ public class PlotGeneratorConfig {
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse region max y from " + parts[1] + "!", e);
                     }
+                } else if ("regionPrice".equalsIgnoreCase(parts[0])) {
+                    try {
+                        regionPrice = Double.parseDouble(parts[1]);
+                        plugin.getLogger().log(Level.INFO, "Region price: " + regionPrice);
+                    } catch (NumberFormatException e) {
+                        plugin.getLogger().log(Level.SEVERE, "Can't parse land price from " + parts[1] + "!", e);
+                    }
                 } else if ("landPrice".equalsIgnoreCase(parts[0])) {
                     try {
                         landPrice = Double.parseDouble(parts[1]);
@@ -145,7 +155,7 @@ public class PlotGeneratorConfig {
             }
         }
 
-        return new PlotGeneratorConfig(schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, landPrice, landPermission);
+        return new PlotGeneratorConfig(schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, landPrice, landPermission);
     }
 
     public static PlotGeneratorConfig fromConfig(PlotGenerator plugin, ConfigurationSection config) {
@@ -162,7 +172,8 @@ public class PlotGeneratorConfig {
         int regionInset = 0;
         int regionMinY = 0;
         int regionMaxY = 255;
-        double langPrice = -1;
+        double regionPrice = -1;
+        double landPrice = -1;
         String landPermission = null;
 
         if (config.contains("config")) {
@@ -176,7 +187,7 @@ public class PlotGeneratorConfig {
                 regionInset = genConfig.getRegionInset();
                 regionMinY = genConfig.getRegionMinY();
                 regionMaxY = genConfig.getRegionMaxY();
-                langPrice = genConfig.getLandPrice();
+                landPrice = genConfig.getLandPrice();
                 landPermission = genConfig.getLandPermission();
                 plugin.getLogger().log(Level.INFO, "Using config " + configName);
             } else {
@@ -216,9 +227,13 @@ public class PlotGeneratorConfig {
             regionMaxY = config.getInt("region.max-y");
             plugin.getLogger().log(Level.INFO, "Region max y: " + regionMaxY);
         }
+        if (config.contains("region.price")) {
+            regionPrice = config.getDouble("region.price");
+            plugin.getLogger().log(Level.INFO, "Region price: " + regionPrice);
+        }
         if (config.contains("land.price")) {
-            langPrice = config.getDouble("land.price");
-            plugin.getLogger().log(Level.INFO, "MbRegionConomy land price: " + langPrice);
+            landPrice = config.getDouble("land.price");
+            plugin.getLogger().log(Level.INFO, "MbRegionConomy land price: " + landPrice);
         }
         if (config.contains("land.permission")) {
             landPermission = config.getString("land.permission");
@@ -233,7 +248,7 @@ public class PlotGeneratorConfig {
             plugin.getLogger().log(Level.INFO, "Schematic: " + config.getString("schematic") + " (size: " + (schematic == null ? "null" : schematic.getSize()) + ")");
         }
 
-        return new PlotGeneratorConfig(schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, langPrice, landPermission);
+        return new PlotGeneratorConfig(schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, landPrice, landPermission);
     }
 
     public CuboidClipboard getSchematic() {
@@ -262,6 +277,10 @@ public class PlotGeneratorConfig {
 
     public int getRegionMaxY() {
         return regionMaxY;
+    }
+
+    public double getRegionPrice() {
+        return regionPrice;
     }
 
     public double getLandPrice() {

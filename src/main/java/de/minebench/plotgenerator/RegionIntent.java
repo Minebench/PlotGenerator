@@ -25,14 +25,16 @@ class RegionIntent {
     private final BlockVector minPoint;
     private final BlockVector maxPoint;
     private BlockVector landSign = null;
+    private double regionPrice = -1;
     private double landPrice = - 1;
     private String landPermission = "";
 
-    public RegionIntent(World world, String regionId, BlockVector minPoint, BlockVector maxPoint) {
+    public RegionIntent(World world, String regionId, BlockVector minPoint, BlockVector maxPoint, double regionPrice) {
         this.world = world;
         this.regionId = regionId;
         this.minPoint = minPoint;
         this.maxPoint = maxPoint;
+        this.regionPrice = regionPrice;
     }
 
     public World getWorld() {
@@ -53,7 +55,7 @@ class RegionIntent {
 
     @Override
     public String toString() {
-        return "RegionIntent{world=" + world.getName() + ",regionId=" + regionId + ",minPoint=" + minPoint + ",maxPoint=" + maxPoint + ",landSign=" + landSign + ",landPrice=" + landPrice + ",landPermission=" + landPermission + "}";
+        return "RegionIntent{world=" + world.getName() + ",regionId=" + regionId + ",minPoint=" + minPoint + ",maxPoint=" + maxPoint + ",regionPrice=" + regionPrice + ",landSign=" + landSign + ",landPrice=" + landPrice + ",landPermission=" + landPermission + "}";
     }
 
     @Override
@@ -67,6 +69,10 @@ class RegionIntent {
 
     public BlockVector getLandSign() {
         return landSign;
+    }
+
+    public double getRegionPrice() {
+        return regionPrice;
     }
 
     public void setLandPrice(double landPrice) {
@@ -84,4 +90,5 @@ class RegionIntent {
     public String getLandPermission() {
         return landPermission;
     }
+
 }

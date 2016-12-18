@@ -29,12 +29,16 @@ import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import de.minebench.plotgenerator.commands.BuyPlotCommand;
+import de.minebench.plotgenerator.commands.PlotGeneratorCommand;
 import me.ChrisvA.MbRegionConomy.MbRegionConomy;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -48,6 +52,7 @@ public final class PlotGenerator extends JavaPlugin {
 
     private WorldGuardPlugin worldGuard = null;
     private MbRegionConomy regionConomy = null;
+    private Economy economy;
     private File weSchemDir;
     private Map<String, PlotGeneratorConfig> worldConfigs;
     private Map<RegionIntent, Boolean> regionIntents = new ConcurrentHashMap<>();
@@ -66,15 +71,15 @@ public final class PlotGenerator extends JavaPlugin {
         }
         loadConfig();
         getCommand("plotgenerator").setExecutor(new PlotGeneratorCommand(this));
+        getCommand("buyplot").setExecutor(new BuyPlotCommand(this));
     }
 
-    void loadConfig() {
+    public void loadConfig() {
         saveDefaultConfig();
         reloadConfig();
         worldConfigs = new HashMap<>();
         getConfig().getConfigurationSection("worlds").getKeys(false).forEach(this::getGeneratorConfig);
     }
-
 
     @Override
     public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
@@ -93,6 +98,20 @@ public final class PlotGenerator extends JavaPlugin {
             regionConomy = MbRegionConomy.getPlugin(MbRegionConomy.class);
         }
         return regionConomy;
+    }
+
+    public Economy getEconomy() {
+        if (economy == null) {
+            if (getServer().getPluginManager().isPluginEnabled("Vault")) {
+                return null;
+            }
+            RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+            if (rsp == null) {
+                return null;
+            }
+            economy = rsp.getProvider();
+        }
+        return economy;
     }
 
     public CuboidClipboard loadSchematic(String schematicName) {
@@ -166,6 +185,10 @@ public final class PlotGenerator extends JavaPlugin {
                     double tpZ = region.getMaximumPoint().getZ();
                     double tpY = intent.getWorld().getHighestBlockYAt((int) tpX, (int) tpZ) + 1;
                     region.setFlag(DefaultFlag.TELE_LOC, new Location(BukkitUtil.getLocalWorld(intent.getWorld()), new Vector(tpX,tpY,tpZ), 180, 0));
+                    if (intent.getRegionPrice() > 0) {
+                        region.setFlag(DefaultFlag.BUYABLE, true);
+                        region.setFlag(DefaultFlag.PRICE, intent.getRegionPrice());
+                    }
 
                     manager.addRegion(region);
                     getLogger().log(Level.INFO, "Added new region " + regionId + " at " + intent.getMinPoint() + " " + intent.getMaxPoint());

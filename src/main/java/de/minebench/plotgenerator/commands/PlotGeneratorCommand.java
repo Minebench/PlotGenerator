@@ -1,4 +1,4 @@
-package de.minebench.plotgenerator;
+package de.minebench.plotgenerator.commands;
 
 /*
  * Copyright 2016 Max Lee (https://github.com/Phoenix616/)
@@ -16,10 +16,13 @@ package de.minebench.plotgenerator;
  * along with this program. If not, see <http://mozilla.org/MPL/2.0/>.
  */
 
+import de.minebench.plotgenerator.PlotGenerator;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+
+import java.util.Arrays;
 
 public class PlotGeneratorCommand implements CommandExecutor {
     private final PlotGenerator plugin;
@@ -32,16 +35,21 @@ public class PlotGeneratorCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length > 0) {
             if ("reload".equalsIgnoreCase(args[0])) {
-                if (sender.hasPermission(command.getPermission() + ".reload")) {
+                String cmdPerm = command.getPermission();
+                command.setPermission(cmdPerm + ".reload");
+                if (command.testPermission(sender)) {
                     plugin.loadConfig();
                     sender.sendMessage(ChatColor.GREEN + plugin.getName() + " config reloaded!");
-                } else {
-                    String cmdPerm = command.getPermission();
-                    command.setPermission(cmdPerm + ".reload");
-                    command.testPermission(sender);
-                    command.setPermission(cmdPerm);
                 }
+                command.setPermission(cmdPerm);
                 return true;
+            } else if ("buy".equalsIgnoreCase(args[0])) {
+                String cmdPerm = command.getPermission();
+                command.setPermission(cmdPerm + ".buy");
+                if (command.testPermission(sender)) {
+                    new BuyPlotCommand(plugin).onCommand(sender, plugin.getCommand("buyplot"), "buyplot", Arrays.copyOfRange(args, 1, args.length));
+                }
+                command.setPermission(cmdPerm);
             }
         }
         return false;
