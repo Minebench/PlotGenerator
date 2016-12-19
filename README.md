@@ -1,5 +1,5 @@
 # PlotGenerator
-This Bukkit plugin provide a custom world generator which you can use with plugins like [Multiverse](https://github.com/Multiverse/Multiverse-Core/) to generate a world by repeating a MCEdit schematic. This can be really useful if you want to generate a plot world which this plugin is intended to do in the first place.
+This Bukkit plugin provides a custom world generator which you can use with plugins like [Multiverse](https://github.com/Multiverse/Multiverse-Core/) to generate a world by repeating a MCEdit schematic. This can be really useful if you want to generate a plot world which this plugin is intended to do in the first place.
 
 It has the ability to automatically protect created plots with [WorldGuard](https://github.com/sk89q/WorldGuard/) and you can automatically set the `BUYABLE` and `PRICE` flag either to use with your own region economy plugin or to buy it with the inbuild `/buyplot` command (needs [Vault](https://github.com/MilkBowl/Vault)). The teleport flag is also set to the south border of the region as an added feature, allowing you to teleport to it with the `/rg tp <id>` command!
 
@@ -15,11 +15,11 @@ To create the same worlds as displayed below in the config section you would use
 
 `/mv create mb_plotworld NORMAL -g PlotGenerator:config=test,schem=plot` (You need to have the test section of the config defined, it wont use the generator of the test world!)
 
-As you can see you you just use `PlotGenerator:schematicname` without any special variable handling if you just want to repeat the schematic.
+As you can see you just use `PlotGenerator:schematicname` without any special variable handling if you only want to repeat a schematic.
 
 ## Setup via Config
 
-Define a section for your world in your config and then just set the `PlotGenerator`as the world's generator. (E.g. with `/mv create plot NORMAL -g PlotGenerator` in MultiVerse) Entries here do not overwrite the 
+Define a section for your world in your config and then just set the `PlotGenerator`as the world's generator. (E.g. with `/mv create plot NORMAL -g PlotGenerator` in MultiVerse) Entries here do not overwrite the world's generator settings set via the ID.
 
 ```yaml
 worlds:
@@ -46,7 +46,7 @@ Command                     | Permission                        | Explanation
 ----------------------------|-----------------------------------|-------------------------------------------------------
 `/plotgenerator`            | `plotgenerator.command`           | Main plugin command, alias: /plotgen
 `/plotgenerator reload`     | `plotgenerator.command.reload`    | Reloads the config You may need to unload the world or restart your server for the changes to take effect!
-`/plotgenerator buy [<id>]` | `plotgenerator.command.buy`       | Shorthand: `/buyplot [<regionid>]`. Buy the region that you are standing in (needs Vault). If you have the permission `plotgenerator.command.buy.byregionid` you can specify a region id.
+`/plotgenerator buy [<id>]` | `plotgenerator.command.buy`       | Short: `/buyplot [<regionid>]`. Purchase the region that you are standing in (needs Vault). If you have the permission `plotgenerator.command.buy.byregionid` you can specify a region id.
 
 ## Downloads
 
