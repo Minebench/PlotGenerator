@@ -47,6 +47,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 public final class PlotGenerator extends JavaPlugin {
 
@@ -278,33 +279,14 @@ public final class PlotGenerator extends JavaPlugin {
      * @return
      */
     private ProtectedRegion getSimilarRegion(RegionIntent intent, BlockVector loc) {
-        String replacedRegionName = intent.getRegionId().replace("%world%", "").replace("%number%", "");
+        Pattern regionRegex = Pattern.compile("^" + intent.getRegionId().replace("%world%", "\\w+").replace("%number%", "\\d+") + "$");
         RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
         ApplicableRegionSet regions = manager.getApplicableRegions(loc);
         for (ProtectedRegion region : regions) {
-            if (getStartSimilarity(region.getId(), replacedRegionName) > replacedRegionName.length() / 2) {
+            if (regionRegex.matcher(region.getId()).matches()) {
                 return region;
             }
         }
         return null;
-    }
-
-    /**
-     * Check how similar the starts two strings
-     * @param string1
-     * @param string2
-     * @return The length that matches
-     */
-    private int getStartSimilarity(String string1, String string2) {
-        if (string1.equalsIgnoreCase(string2)) {
-            return string1.length();
-        }
-        int i = 0;
-        String s1l = string1.toLowerCase();
-        String s2l = string2.toLowerCase();
-        while (i <= s2l.length() && s1l.startsWith(s2l.substring(0, i))) {
-            i++;
-        }
-        return i;
     }
 }
