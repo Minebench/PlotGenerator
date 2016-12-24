@@ -3,7 +3,7 @@ version: '${minecraft.plugin.version}'
 main: de.minebench.plotgenerator.PlotGenerator
 load: STARTUP
 depend: [WorldEdit]
-softdepend: [MbRegionConomy,WorldGuard,Vault]
+softdepend: [PlotSigns,MbRegionConomy,WorldGuard,Vault]
 authors: [Phoenix616]
 description: ${project.description}
 commands:
