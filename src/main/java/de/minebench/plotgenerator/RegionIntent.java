@@ -21,28 +21,24 @@ import org.bukkit.World;
 
 class RegionIntent {
     private final World world;
-    private final String regionId;
+    private PlotGeneratorConfig config;
     private final BlockVector minPoint;
     private final BlockVector maxPoint;
-    private BlockVector landSign = null;
-    private double regionPrice = -1;
-    private double landPrice = - 1;
-    private String landPermission = "";
+    private BlockVector sign = null;
 
-    public RegionIntent(World world, String regionId, BlockVector minPoint, BlockVector maxPoint, double regionPrice) {
+    public RegionIntent(World world, PlotGeneratorConfig config, BlockVector minPoint, BlockVector maxPoint) {
         this.world = world;
-        this.regionId = regionId;
+        this.config = config;
         this.minPoint = minPoint;
         this.maxPoint = maxPoint;
-        this.regionPrice = regionPrice;
     }
 
     public World getWorld() {
         return world;
     }
 
-    public String getRegionId() {
-        return regionId;
+    public PlotGeneratorConfig getConfig() {
+        return config;
     }
 
     public BlockVector getMinPoint() {
@@ -55,7 +51,7 @@ class RegionIntent {
 
     @Override
     public String toString() {
-        return "RegionIntent{world=" + world.getName() + ",regionId=" + regionId + ",minPoint=" + minPoint + ",maxPoint=" + maxPoint + ",regionPrice=" + regionPrice + ",landSign=" + landSign + ",landPrice=" + landPrice + ",landPermission=" + landPermission + "}";
+        return "RegionIntent{world=" + world.getName() + ",config =" + config.getId() + ",minPoint=" + minPoint + ",maxPoint=" + maxPoint + ",sign=" + sign + "}";
     }
 
     @Override
@@ -63,32 +59,12 @@ class RegionIntent {
         return toString().hashCode();
     }
 
-    public void setLandSign(BlockVector regionConomySign) {
-        this.landSign = regionConomySign;
+    public void setSign(BlockVector regionConomySign) {
+        this.sign = regionConomySign;
     }
 
-    public BlockVector getLandSign() {
-        return landSign;
-    }
-
-    public double getRegionPrice() {
-        return regionPrice;
-    }
-
-    public void setLandPrice(double landPrice) {
-        this.landPrice = landPrice;
-    }
-
-    public double getLandPrice() {
-        return landPrice;
-    }
-
-    public void setLandPermission(String landPermission) {
-        this.landPermission = landPermission;
-    }
-
-    public String getLandPermission() {
-        return landPermission;
+    public BlockVector getSign() {
+        return sign;
     }
 
 }

@@ -85,11 +85,9 @@ public class PlotChunkGenerator extends ChunkGenerator {
                         config.getRegionMaxY(),
                         minPoint.getBlockZ() + length - 2 * config.getRegionInset()
                 );
-                RegionIntent intent = new RegionIntent(world, config.getRegionId(), minPoint, maxPoint, config.getRegionPrice());
-                if (sign != null && plugin.getRegionConomy() != null) {
-                    intent.setLandSign(sign);
-                    intent.setLandPrice(config.getLandPrice());
-                    intent.setLandPermission(config.getLandPermission());
+                RegionIntent intent = new RegionIntent(world, config, minPoint, maxPoint);
+                if (sign != null ) {
+                    intent.setSign(sign);
                 }
                 plugin.registerRegionIntent(intent);
             }

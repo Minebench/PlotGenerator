@@ -25,6 +25,7 @@ import java.util.logging.Level;
 
 public class PlotGeneratorConfig {
 
+    private final String id;
     private final CuboidClipboard schematic;
     private final BlockVector center;
     private final int overlap;
@@ -33,10 +34,12 @@ public class PlotGeneratorConfig {
     private final int regionMinY;
     private final int regionMaxY;
     private final double regionPrice;
+    private final String plotSignsPerm;
     private final double landPrice;
     private final String landPermission;
 
-    public PlotGeneratorConfig(CuboidClipboard schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, double landPrice, String landPermission) {
+    public PlotGeneratorConfig(String id, CuboidClipboard schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotSignsPerm, double landPrice, String landPermission) {
+        this.id = id;
         this.schematic = schematic;
         this.center = center;
         this.overlap = overlap;
@@ -45,6 +48,7 @@ public class PlotGeneratorConfig {
         this.regionMinY = regionMinY;
         this.regionMaxY = regionMaxY;
         this.regionPrice = regionPrice;
+        this.plotSignsPerm = plotSignsPerm;
         this.landPrice = landPrice;
         this.landPermission = landPermission;
     }
@@ -53,109 +57,85 @@ public class PlotGeneratorConfig {
         if (id == null || id.isEmpty()) {
             return null;
         }
-        CuboidClipboard schematic = null;
-        Vector center = new Vector(0, 0, 0);
+
+        Builder b = new Builder(plugin, id);
+
         String args[] = id.split(",");
-        int overlap = 0;
-        String regionId = null;
-        int regionInset = 0;
-        int regionMinY = 0;
-        int regionMaxY = 255;
-        double regionPrice = -1;
-        double landPrice = -1;
-        String landPermission = null;
 
         for (String arg : args) {
             if (!arg.contains("=")) {
-                schematic = plugin.loadSchematic(arg);
+                b.schematic(arg);
             } else {
                 String[] parts = arg.split("=");
                 if ("schem".equalsIgnoreCase(parts[0])) {
-                    schematic = plugin.loadSchematic(parts[1]);
-                    plugin.getLogger().log(Level.INFO, "Schematic: " + parts[1] + " (size: " + (schematic == null ? "null" : schematic.getSize()) + ")");
+                    b.schematic(parts[1]);
                 } else if ("config".equalsIgnoreCase(parts[0])) {
-                    PlotGeneratorConfig config = plugin.getGeneratorConfig(parts[1]);
-                    if (config != null) {
-                        plugin.getLogger().log(Level.INFO, "Using config " + parts[1]);
-                        schematic = config.getSchematic();
-                        center = config.getCenter();
-                    } else {
-                        plugin.getLogger().log(Level.WARNING, "Config " + parts[1] + " not found?");
-                    }
+                    b.copy(parts[1]);
                 } else if ("x".equalsIgnoreCase(parts[0])) {
                     try {
-                        center = center.setX(Integer.parseInt(parts[1]));
-                        plugin.getLogger().log(Level.INFO, "Center x: " + center.getBlockX());
+                        b.centerX(Integer.parseInt(parts[1]));
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse center x coordinates from " + parts[1] + "!", e);
                     }
                 } else if ("y".equalsIgnoreCase(parts[0])) {
                     try {
-                        center = center.setY(Integer.parseInt(parts[1]));
-                        plugin.getLogger().log(Level.INFO, "Center y: " + center.getBlockY());
+                        b.centerY(Integer.parseInt(parts[1]));
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse center y coordinates from " + parts[1] + "!", e);
                     }
                 } else if ("z".equalsIgnoreCase(parts[0])) {
                     try {
-                        center = center.setZ(Integer.parseInt(parts[1]));
-                        plugin.getLogger().log(Level.INFO, "Center z: " + center.getBlockZ());
+                        b.centerZ(Integer.parseInt(parts[1]));
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse center z coordinates from " + parts[1] + "!", e);
                     }
                 } else if ("overlap".equalsIgnoreCase(parts[0])) {
                     try {
-                        overlap = Integer.parseInt(parts[1]);
-                        plugin.getLogger().log(Level.INFO, "Overlap: " + overlap);
+                        b.overlap(Integer.parseInt(parts[1]));
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse overlap from " + parts[1] + "!", e);
                     }
                 } else if ("regionId".equalsIgnoreCase(parts[0])) {
-                    regionId = parts[1];
-                    plugin.getLogger().log(Level.INFO, "Region id: " + regionId);
+                    b.regionId(parts[1]);
                 } else if ("regionInset".equalsIgnoreCase(parts[0])) {
                     try {
-                        regionInset = Integer.parseInt(parts[1]);
-                        plugin.getLogger().log(Level.INFO, "Region inset: " + regionInset);
+                        b.regionInset(Integer.parseInt(parts[1]));
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse region inset from " + parts[1] + "!", e);
                     }
                 } else if ("regionMinY".equalsIgnoreCase(parts[0])) {
                     try {
-                        regionMinY = Integer.parseInt(parts[1]);
-                        plugin.getLogger().log(Level.INFO, "Region min y: " + regionInset);
+                        b.regionMinY(Integer.parseInt(parts[1]));
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse region min y from " + parts[1] + "!", e);
                     }
                 } else if ("regionMaxY".equalsIgnoreCase(parts[0])) {
                     try {
-                        regionMaxY = Integer.parseInt(parts[1]);
-                        plugin.getLogger().log(Level.INFO, "Region max y: " + regionInset);
+                        b.regionMaxY(Integer.parseInt(parts[1]));
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse region max y from " + parts[1] + "!", e);
                     }
                 } else if ("regionPrice".equalsIgnoreCase(parts[0])) {
                     try {
-                        regionPrice = Double.parseDouble(parts[1]);
-                        plugin.getLogger().log(Level.INFO, "Region price: " + regionPrice);
+                        b.regionPrice(Double.parseDouble(parts[1]));
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse land price from " + parts[1] + "!", e);
                     }
+                } else if ("plotSignsPerm".equalsIgnoreCase(parts[0])) {
+                    b.plotSignsPerm(parts[1]);
                 } else if ("landPrice".equalsIgnoreCase(parts[0])) {
                     try {
-                        landPrice = Double.parseDouble(parts[1]);
-                        plugin.getLogger().log(Level.INFO, "MbRegionConomy land price: " + landPrice);
+                        b.landPrice(Double.parseDouble(parts[1]));
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse land price from " + parts[1] + "!", e);
                     }
                 } else if ("landPermission".equalsIgnoreCase(parts[0])) {
-                    landPermission = parts[1];
-                    plugin.getLogger().log(Level.INFO, "MbRegionConomy land permission: " + regionInset);
+                    b.landPermission(parts[1]);
                 }
             }
         }
 
-        return new PlotGeneratorConfig(schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, landPrice, landPermission);
+        return b.build();
     }
 
     public static PlotGeneratorConfig fromConfig(PlotGenerator plugin, ConfigurationSection config) {
@@ -165,90 +145,52 @@ public class PlotGeneratorConfig {
 
         plugin.getLogger().log(Level.INFO, "Loading config " + config.getName());
 
-        CuboidClipboard configSchematic = null;
-        Vector center = new Vector(0, 0, 0);
-        int overlap = 0;
-        String regionId = null;
-        int regionInset = 0;
-        int regionMinY = 0;
-        int regionMaxY = 255;
-        double regionPrice = -1;
-        double landPrice = -1;
-        String landPermission = null;
+        Builder b = new Builder(plugin, config.getName());
 
         if (config.contains("config")) {
-            String configName = config.getString("config");
-            PlotGeneratorConfig genConfig = plugin.getGeneratorConfig(configName);
-            if (genConfig != null) {
-                configSchematic = genConfig.getSchematic();
-                center = genConfig.getCenter();
-                overlap = genConfig.getOverlap();
-                regionId = genConfig.getRegionId();
-                regionInset = genConfig.getRegionInset();
-                regionMinY = genConfig.getRegionMinY();
-                regionMaxY = genConfig.getRegionMaxY();
-                landPrice = genConfig.getLandPrice();
-                landPermission = genConfig.getLandPermission();
-                plugin.getLogger().log(Level.INFO, "Using config " + configName);
-            } else {
-                plugin.getLogger().log(Level.WARNING, "Config " + configName + " not found?");
-            }
+            b.copy(config.getString("config"));
         }
-
+        if (config.contains("schematic")) {
+            b.schematic(config.getString("schematic"));
+        }
         if (config.contains("center.x")) {
-            center = center.setX(config.getInt("center.x"));
-            plugin.getLogger().log(Level.INFO, "Center x: " + center.getBlockX());
+            b.centerX(config.getInt("center.x"));
         }
         if (config.contains("center.y")) {
-            center = center.setY(config.getInt("center.y"));
-            plugin.getLogger().log(Level.INFO, "Center y: " + center.getBlockY());
+            b.centerY(config.getInt("center.y"));
         }
         if (config.contains("center.z")) {
-            center = center.setZ(config.getInt("center.z"));
-            plugin.getLogger().log(Level.INFO, "Center z: " + center.getBlockZ());
+            b.centerZ(config.getInt("center.z"));
         }
         if (config.contains("overlap")) {
-            overlap = config.getInt("overlap");
-            plugin.getLogger().log(Level.INFO, "Overlap: " + overlap);
+            b.overlap(config.getInt("overlap"));
         }
         if (config.contains("region.id")) {
-            regionId = config.getString("region.id");
-            plugin.getLogger().log(Level.INFO, "Region id: " + regionId);
+            b.regionId(config.getString("region.id"));
         }
         if (config.contains("region.inset")) {
-            regionInset = config.getInt("region.inset");
-            plugin.getLogger().log(Level.INFO, "Region inset: " + regionInset);
+            b.regionInset(config.getInt("region.inset"));
         }
         if (config.contains("region.min-y")) {
-            regionMinY = config.getInt("region.min-y");
-            plugin.getLogger().log(Level.INFO, "Region min y: " + regionMinY);
+            b.regionMinY(config.getInt("region.min-y"));
         }
         if (config.contains("region.max-y")) {
-            regionMaxY = config.getInt("region.max-y");
-            plugin.getLogger().log(Level.INFO, "Region max y: " + regionMaxY);
+            b.regionMaxY(config.getInt("region.max-y"));
         }
         if (config.contains("region.price")) {
-            regionPrice = config.getDouble("region.price");
-            plugin.getLogger().log(Level.INFO, "Region price: " + regionPrice);
+            b.regionPrice(config.getDouble("region.price"));
+        }
+        if (config.contains("plotsigns.perm")) {
+            b.plotSignsPerm(config.getString("plotsigns.perm"));
         }
         if (config.contains("land.price")) {
-            landPrice = config.getDouble("land.price");
-            plugin.getLogger().log(Level.INFO, "MbRegionConomy land price: " + landPrice);
+            b.landPrice(config.getDouble("land.price"));
         }
         if (config.contains("land.permission")) {
-            landPermission = config.getString("land.permission");
-            plugin.getLogger().log(Level.INFO, "MbRegionConomy land permission: " + landPermission);
+            b.landPermission(config.getString("land.permission"));
         }
 
-        CuboidClipboard schematic = config.contains("schematic") ? plugin.loadSchematic(config.getString("schematic")) : null;
-        if (schematic == null) {
-            schematic = configSchematic;
-            plugin.getLogger().log(Level.INFO, "Schematic is null." + (schematic != null ? " Using the one from the config option. (Size: " + schematic.getSize() + ")" : ""));
-        } else {
-            plugin.getLogger().log(Level.INFO, "Schematic: " + config.getString("schematic") + " (size: " + (schematic == null ? "null" : schematic.getSize()) + ")");
-        }
-
-        return new PlotGeneratorConfig(schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, landPrice, landPermission);
+        return b.build();
     }
 
     public CuboidClipboard getSchematic() {
@@ -283,11 +225,163 @@ public class PlotGeneratorConfig {
         return regionPrice;
     }
 
+    public String getPlotSignsPerm() {
+        return plotSignsPerm;
+    }
+
     public double getLandPrice() {
         return landPrice;
     }
 
     public String getLandPermission() {
         return landPermission;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public static class Builder {
+
+        private String id;
+        private CuboidClipboard schematic = null;
+        private Vector center = new Vector(0, 0, 0);
+        private int overlap = 0;
+        private String regionId = null;
+        private int regionInset = 0;
+        private int regionMinY = 0;
+        private int regionMaxY = 255;
+        private double regionPrice = -1;
+        private String plotSignsPerm = null;
+        private double landPrice = -1;
+        private String landPermission = null;
+        private PlotGenerator plugin;
+
+        public Builder(PlotGenerator plugin, String id) {
+            this.plugin = plugin;
+            this.id = id;
+        }
+
+        public Builder schematic(String name) {
+            return this.schematic(name, plugin.loadSchematic(name));
+        }
+
+        public Builder schematic(String name, CuboidClipboard schematic) {
+            if (schematic == null) {
+                plugin.getLogger().log(Level.WARNING, "Schematic " + name + "not found?");
+                return this;
+            }
+            this.schematic = schematic;
+            plugin.getLogger().log(Level.INFO, "Schematic: " + name + " (size: " + (schematic == null ? "null" : schematic.getSize()) + ")");
+            return this;
+        }
+
+        public Builder center(Vector center) {
+            this.center = center;
+            plugin.getLogger().log(Level.INFO, "Center: " + center);
+            return this;
+        }
+
+        public Builder centerX(double x) {
+            center = center.setX(x);
+            plugin.getLogger().log(Level.INFO, "Center x: " + x);
+            return this;
+        }
+
+        public Builder centerY(double y) {
+            center = center.setY(y);
+            plugin.getLogger().log(Level.INFO, "Center y: " + y);
+            return this;
+        }
+
+        public Builder centerZ(double z) {
+            center = center.setZ(z);
+            plugin.getLogger().log(Level.INFO, "Center z: " + z);
+            return this;
+        }
+
+        public Builder overlap(int overlap) {
+            this.overlap = overlap;
+            plugin.getLogger().log(Level.INFO, "Overlap: " + overlap);
+            return this;
+        }
+
+        public Builder regionId(String regionId) {
+            this.regionId = regionId;
+            plugin.getLogger().log(Level.INFO, "Region id: " + regionId);
+            return this;
+        }
+
+        public Builder regionInset(int regionInset) {
+            this.regionInset = regionInset;
+            plugin.getLogger().log(Level.INFO, "Region inset: " + regionInset);
+            return this;
+        }
+
+        public Builder regionMinY(int regionMinY) {
+            this.regionMinY = regionMinY;
+            plugin.getLogger().log(Level.INFO, "Region min y: " + regionMinY);
+            return this;
+        }
+
+        public Builder regionMaxY(int regionMaxY) {
+            this.regionMaxY = regionMaxY;
+            plugin.getLogger().log(Level.INFO, "Region max y: " + regionMaxY);
+            return this;
+        }
+
+        public Builder regionPrice(double regionPrice) {
+            this.regionPrice = regionPrice;
+            plugin.getLogger().log(Level.INFO, "Region price: " + regionPrice);
+            return this;
+        }
+
+        public Builder plotSignsPerm(String plotSignsPerm) {
+            this.plotSignsPerm = plotSignsPerm;
+            plugin.getLogger().log(Level.INFO, "PlotSigns buy permission: " + plotSignsPerm);
+            return this;
+        }
+
+        public Builder landPrice(double landPrice) {
+            this.landPrice = landPrice;
+            plugin.getLogger().log(Level.INFO, "MbRegionConomy land price: " + landPrice);
+            return this;
+        }
+
+        public Builder landPermission(String landPermission) {
+            this.landPermission = landPermission;
+            plugin.getLogger().log(Level.INFO, "MbRegionConomy land permission: " + landPermission);
+            return this;
+        }
+
+        public PlotGeneratorConfig build() {
+            return new PlotGeneratorConfig(id, schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, plotSignsPerm, landPrice, landPermission);
+        }
+
+        public Builder copy(PlotGeneratorConfig config) {
+            schematic = config.getSchematic();
+            center = config.getCenter();
+            overlap = config.getOverlap();
+            regionId = config.getRegionId();
+            regionInset = config.getRegionInset();
+            regionMinY = config.getRegionMinY();
+            regionMaxY = config.getRegionMaxY();
+            regionPrice = config.getRegionPrice();
+            plotSignsPerm = config.getPlotSignsPerm();
+            landPrice = config.getLandPrice();
+            landPermission = config.getLandPermission();
+            return this;
+        }
+
+        public Builder copy(String configName) {
+            PlotGeneratorConfig config = plugin.getGeneratorConfig(configName);
+            if (config != null) {
+                plugin.getLogger().log(Level.INFO, "Using config " + configName);
+                return copy(config);
+            } else {
+                plugin.getLogger().log(Level.WARNING, "Config " + configName + " not found?");
+            }
+            return this;
+        }
     }
 }

@@ -31,6 +31,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import de.minebench.plotgenerator.commands.BuyPlotCommand;
 import de.minebench.plotgenerator.commands.PlotGeneratorCommand;
+import de.minebench.plotsigns.PlotSigns;
 import me.ChrisvA.MbRegionConomy.MbRegionConomy;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.World;
@@ -53,7 +54,10 @@ public final class PlotGenerator extends JavaPlugin {
 
     private WorldGuardPlugin worldGuard = null;
     private MbRegionConomy regionConomy = null;
+    private PlotSigns plotSigns;
+
     private Economy economy;
+
     private File weSchemDir;
     private Map<String, PlotGeneratorConfig> worldConfigs;
     private Map<RegionIntent, Boolean> regionIntents = new ConcurrentHashMap<>();
@@ -99,6 +103,13 @@ public final class PlotGenerator extends JavaPlugin {
             regionConomy = MbRegionConomy.getPlugin(MbRegionConomy.class);
         }
         return regionConomy;
+    }
+
+    public PlotSigns getPlotSigns() {
+        if (plotSigns == null && getServer().getPluginManager().isPluginEnabled("PlotSigns")) {
+            plotSigns = PlotSigns.getPlugin(PlotSigns.class);
+        }
+        return plotSigns;
     }
 
     public Economy getEconomy() {
@@ -174,8 +185,8 @@ public final class PlotGenerator extends JavaPlugin {
                 if (getWorldGuard() != null) {
                     RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
                     if (testForRegion(intent)) {
-                        if (intent.getLandSign() != null) {
-                            registerRegionConomySign(intent);
+                        if (intent.getSign() != null) {
+                            registerBuySign(intent);
                         }
                         continue;
                     }
@@ -186,15 +197,18 @@ public final class PlotGenerator extends JavaPlugin {
                     double tpZ = region.getMaximumPoint().getZ();
                     double tpY = intent.getWorld().getHighestBlockYAt((int) tpX, (int) tpZ) + 1;
                     region.setFlag(DefaultFlag.TELE_LOC, new Location(BukkitUtil.getLocalWorld(intent.getWorld()), new Vector(tpX,tpY,tpZ), 180, 0));
-                    if (intent.getRegionPrice() > 0) {
+                    if (intent.getConfig().getRegionPrice() > 0) {
                         region.setFlag(DefaultFlag.BUYABLE, true);
-                        region.setFlag(DefaultFlag.PRICE, intent.getRegionPrice());
+                        region.setFlag(DefaultFlag.PRICE, intent.getConfig().getRegionPrice());
+                    }
+                    if (intent.getConfig().getPlotSignsPerm() != null && !intent.getConfig().getPlotSignsPerm().isEmpty() && getPlotSigns() != null) {
+                        region.setFlag(PlotSigns.BUY_PERM_FLAG, intent.getConfig().getPlotSignsPerm());
                     }
 
                     manager.addRegion(region);
                     getLogger().log(Level.INFO, "Added new region " + regionId + " at " + intent.getMinPoint() + " " + intent.getMaxPoint());
-                    if (intent.getLandSign() != null) {
-                        registerRegionConomySign(intent);
+                    if (intent.getSign() != null) {
+                        registerBuySign(intent);
                     }
                 }
             }
@@ -202,40 +216,61 @@ public final class PlotGenerator extends JavaPlugin {
         }).getTaskId();
     }
 
-    private void registerRegionConomySign(RegionIntent intent) {
-        if (getRegionConomy() == null || getWorldGuard() == null || intent.getLandPrice() < 0) {
+    private void registerBuySign(RegionIntent intent) {
+        if (getWorldGuard() == null || (getRegionConomy() == null || intent.getConfig().getLandPrice() < 0) && (getPlotSigns() == null || intent.getConfig().getRegionPrice() < 0)) {
             return;
         }
 
-        ProtectedRegion region = getSimilarRegion(intent, intent.getLandSign());
+        ProtectedRegion region = getSimilarRegion(intent, intent.getSign());
 
         if (region == null) {
-            getLogger().log(Level.WARNING, "Sign was found at " + intent.getLandSign() + " but no region?");
+            getLogger().log(Level.WARNING, "Sign was found at " + intent.getSign() + " but no region?");
             return;
         }
 
+        if (getPlotSigns() != null) {
+            Block block = intent.getWorld().getBlockAt(intent.getSign().getBlockX(), intent.getSign().getBlockY(), intent.getSign().getBlockZ());
+            if (block.getState() instanceof Sign) {
+                Sign sign = (Sign) block.getState();
+                try {
+                    String[] lines = getPlotSigns().getSignLines(region);
+                    for (int i = 0; i < lines.length; i++) {
+                        sign.setLine(i, lines[i]);
+                    }
+                    sign.update();
+                    getLogger().log(Level.INFO, "Wrote PlotSigns sign for region " + intent.getWorld().getName() + "/" + region.getId() + " at " + intent.getSign());
+                } catch (IllegalArgumentException e) {
+                    getLogger().log(Level.SEVERE, "Could not create PlotSigns sign! ", e);
+                }
+            }
+        } else if (getRegionConomy() != null) {
+            registerRegionConomySign(region, intent);
+        }
+    }
+
+    private void registerRegionConomySign(ProtectedRegion region, RegionIntent intent) {
         getServer().getScheduler().runTaskAsynchronously(this, () -> {
             region.setFlag(DefaultFlag.BUYABLE, true);
-            getRegionConomy().getRegionDatabase().insertRegion(intent.getWorld().getName(), region.getId(), intent.getLandPrice());
-            if (intent.getLandPermission() != null && !intent.getLandPermission().isEmpty()) {
-                getRegionConomy().getRegionDatabase().updatePermission(intent.getWorld().getName(), region.getId(), intent.getLandPermission());
+            getRegionConomy().getRegionDatabase().insertRegion(intent.getWorld().getName(), region.getId(), intent.getConfig().getLandPrice());
+            if (intent.getConfig().getLandPermission() != null && !intent.getConfig().getLandPermission().isEmpty()) {
+                getRegionConomy().getRegionDatabase().updatePermission(intent.getWorld().getName(), region.getId(), intent.getConfig().getLandPermission());
             }
-            getLogger().log(Level.INFO, "Made region " + intent.getWorld().getName() + "/" + region.getId() + " buyable. Price: " + intent.getLandPrice() + (intent.getLandPermission() != null ? ", permission: " + intent.getLandPermission() : ""));
+            getLogger().log(Level.INFO, "Made region " + intent.getWorld().getName() + "/" + region.getId() + " buyable. Price: " + intent.getConfig().getLandPrice() + (intent.getConfig().getLandPermission() != null ? ", permission: " + intent.getConfig().getLandPermission() : ""));
 
             String[] lines = new String[4];
             lines[0] = getRegionConomy().getConf().getSignSell();
             lines[1] = region.getId();
-            lines[2] = String.valueOf(intent.getLandPrice());
-            lines[3] = intent.getLandPermission();
+            lines[2] = String.valueOf(intent.getConfig().getLandPrice());
+            lines[3] = intent.getConfig().getLandPermission();
             getServer().getScheduler().runTask(this, () -> {
-                Block block = intent.getWorld().getBlockAt(intent.getLandSign().getBlockX(), intent.getLandSign().getBlockY(), intent.getLandSign().getBlockZ());
+                Block block = intent.getWorld().getBlockAt(intent.getSign().getBlockX(), intent.getSign().getBlockY(), intent.getSign().getBlockZ());
                 if (block.getState() instanceof Sign) {
                     Sign sign = (Sign) block.getState();
                     for (int i = 0; i < lines.length; i++) {
                         sign.setLine(i, lines[i]);
                     }
                     sign.update();
-                    getLogger().log(Level.INFO, "Wrote sign for region " + intent.getWorld().getName() + "/" + region.getId() + " at " + intent.getLandSign());
+                    getLogger().log(Level.INFO, "Wrote MbRegionConomy sign for region " + intent.getWorld().getName() + "/" + region.getId() + " at " + intent.getSign());
                 }
             });
         });
@@ -247,7 +282,7 @@ public final class PlotGenerator extends JavaPlugin {
      */
     private String getNewRegionId(RegionIntent intent) {
         RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
-        String mapKey = intent.getWorld().getName() + "_" + intent.getRegionId();
+        String mapKey = intent.getWorld().getName() + "_" + intent.getConfig().getRegionId();
         int idNumber = 0;
         if (regionIds.containsKey(mapKey)) {
             idNumber = regionIds.get(mapKey);
@@ -256,7 +291,7 @@ public final class PlotGenerator extends JavaPlugin {
         String regionName;
         do {
             idNumber++;
-            regionName = intent.getRegionId().replace("%world%", intent.getWorld().getName());
+            regionName = intent.getConfig().getRegionId().replace("%world%", intent.getWorld().getName());
             regionName = regionName.contains("%number%") ? regionName.replace("%number%", String.valueOf(idNumber)) : regionName + idNumber;
         } while (manager.getRegion(regionName) != null);
 
@@ -279,7 +314,7 @@ public final class PlotGenerator extends JavaPlugin {
      * @return
      */
     private ProtectedRegion getSimilarRegion(RegionIntent intent, BlockVector loc) {
-        Pattern regionRegex = Pattern.compile("^" + intent.getRegionId().replace("%world%", "\\w+").replace("%number%", "\\d+") + "$");
+        Pattern regionRegex = Pattern.compile("^" + intent.getConfig().getRegionId().replace("%world%", "\\w+").replace("%number%", "\\d+") + "$");
         RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
         ApplicableRegionSet regions = manager.getApplicableRegions(loc);
         for (ProtectedRegion region : regions) {
