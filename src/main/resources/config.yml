@@ -1,16 +1,16 @@
 worlds:
   test: # config for world test
-    schematic: testschematic # The name of the schematic
+    schematic: "testschematic" # The name of the schematic
     overlap: 1 # How much it should overlap (e.g. if you want odd roads)
     center: # Where to start the schematics if you want to align it to some existin structures
       x: 100
       z: 0
     region: # WorldGuard region creation settings
-      id: %world%_plot_%number% # The id of the newly created region. %world% gets replaced with the world's name, %number% with the number of that region
+      id: "%world%_plot_%number%" # The id of the newly created region. %world% gets replaced with the world's name, %number% with the number of that region
       inset: 5 # How far away from the schematics border the region should start, use 0 to protect the whole schematic
       min-y: 40 # The lower end of the region
       max-y: 100 # The upper end of the region
       price: 50 # Sets the buyable and the price flag
   mb_plotworld:
-    config: test # Use the settings of world test
-    schematic: plot # but use the schematic plot
+    config: "test" # Use the settings of world test
+    schematic: "plot" # but use the schematic plot
