@@ -314,7 +314,9 @@ public final class PlotGenerator extends JavaPlugin {
      * @return
      */
     private ProtectedRegion getSimilarRegion(RegionIntent intent, BlockVector loc) {
-        Pattern regionRegex = Pattern.compile("^" + intent.getConfig().getRegionId().replace("%world%", "\\w+").replace("%number%", "\\d+") + "$");
+        String regionRegexString = intent.getConfig().getRegionId().replace("%world%", "\\w+");
+        regionRegexString = regionRegexString.contains("%number%") ? regionRegexString.replace("%number%", "\\d+") : regionRegexString + "\\d+";
+        Pattern regionRegex = Pattern.compile("^" + regionRegexString + "$");
         RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
         ApplicableRegionSet regions = manager.getApplicableRegions(loc);
         for (ProtectedRegion region : regions) {
