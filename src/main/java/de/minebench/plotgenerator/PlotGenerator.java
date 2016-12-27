@@ -201,8 +201,8 @@ public final class PlotGenerator extends JavaPlugin {
                         region.setFlag(DefaultFlag.BUYABLE, true);
                         region.setFlag(DefaultFlag.PRICE, intent.getConfig().getRegionPrice());
                     }
-                    if (intent.getConfig().getPlotSignsPerm() != null && !intent.getConfig().getPlotSignsPerm().isEmpty() && getPlotSigns() != null) {
-                        region.setFlag(PlotSigns.BUY_PERM_FLAG, intent.getConfig().getPlotSignsPerm());
+                    if (intent.getConfig().getPlotType() != null && !intent.getConfig().getPlotType().isEmpty() && getPlotSigns() != null) {
+                        region.setFlag(PlotSigns.PLOT_TYPE_FLAG, intent.getConfig().getPlotType());
                     }
 
                     manager.addRegion(region);

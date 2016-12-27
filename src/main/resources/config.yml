@@ -11,6 +11,8 @@ worlds:
       min-y: 40 # The lower end of the region
       max-y: 100 # The upper end of the region
       price: 50 # Sets the buyable and the price flag
+    plotsigns:
+      type: "TestPlot"
   mb_plotworld:
     config: "test" # Use the settings of world test
     schematic: "plot" # but use the schematic plot

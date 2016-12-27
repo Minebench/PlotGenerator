@@ -34,11 +34,11 @@ public class PlotGeneratorConfig {
     private final int regionMinY;
     private final int regionMaxY;
     private final double regionPrice;
-    private final String plotSignsPerm;
+    private final String plotType;
     private final double landPrice;
     private final String landPermission;
 
-    public PlotGeneratorConfig(String id, CuboidClipboard schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotSignsPerm, double landPrice, String landPermission) {
+    public PlotGeneratorConfig(String id, CuboidClipboard schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotType, double landPrice, String landPermission) {
         this.id = id;
         this.schematic = schematic;
         this.center = center;
@@ -48,7 +48,7 @@ public class PlotGeneratorConfig {
         this.regionMinY = regionMinY;
         this.regionMaxY = regionMaxY;
         this.regionPrice = regionPrice;
-        this.plotSignsPerm = plotSignsPerm;
+        this.plotType = plotType;
         this.landPrice = landPrice;
         this.landPermission = landPermission;
     }
@@ -121,8 +121,8 @@ public class PlotGeneratorConfig {
                     } catch (NumberFormatException e) {
                         plugin.getLogger().log(Level.SEVERE, "Can't parse land price from " + parts[1] + "!", e);
                     }
-                } else if ("plotSignsPerm".equalsIgnoreCase(parts[0])) {
-                    b.plotSignsPerm(parts[1]);
+                } else if ("plotType".equalsIgnoreCase(parts[0])) {
+                    b.plotType(parts[1]);
                 } else if ("landPrice".equalsIgnoreCase(parts[0])) {
                     try {
                         b.landPrice(Double.parseDouble(parts[1]));
@@ -180,8 +180,8 @@ public class PlotGeneratorConfig {
         if (config.contains("region.price")) {
             b.regionPrice(config.getDouble("region.price"));
         }
-        if (config.contains("plotsigns.perm")) {
-            b.plotSignsPerm(config.getString("plotsigns.perm"));
+        if (config.contains("plotsigns.type")) {
+            b.plotType(config.getString("plotsigns.type"));
         }
         if (config.contains("land.price")) {
             b.landPrice(config.getDouble("land.price"));
@@ -225,8 +225,8 @@ public class PlotGeneratorConfig {
         return regionPrice;
     }
 
-    public String getPlotSignsPerm() {
-        return plotSignsPerm;
+    public String getPlotType() {
+        return plotType;
     }
 
     public double getLandPrice() {
@@ -252,7 +252,7 @@ public class PlotGeneratorConfig {
         private int regionMinY = 0;
         private int regionMaxY = 255;
         private double regionPrice = -1;
-        private String plotSignsPerm = null;
+        private String plotType = null;
         private double landPrice = -1;
         private String landPermission = null;
         private PlotGenerator plugin;
@@ -336,9 +336,9 @@ public class PlotGeneratorConfig {
             return this;
         }
 
-        public Builder plotSignsPerm(String plotSignsPerm) {
-            this.plotSignsPerm = plotSignsPerm;
-            plugin.getLogger().log(Level.INFO, "PlotSigns buy permission: " + plotSignsPerm);
+        public Builder plotType(String plotType) {
+            this.plotType = plotType;
+            plugin.getLogger().log(Level.INFO, "PlotSigns plot type: " + plotType);
             return this;
         }
 
@@ -355,7 +355,7 @@ public class PlotGeneratorConfig {
         }
 
         public PlotGeneratorConfig build() {
-            return new PlotGeneratorConfig(id, schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, plotSignsPerm, landPrice, landPermission);
+            return new PlotGeneratorConfig(id, schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, plotType, landPrice, landPermission);
         }
 
         public Builder copy(PlotGeneratorConfig config) {
@@ -367,7 +367,7 @@ public class PlotGeneratorConfig {
             regionMinY = config.getRegionMinY();
             regionMaxY = config.getRegionMaxY();
             regionPrice = config.getRegionPrice();
-            plotSignsPerm = config.getPlotSignsPerm();
+            plotType = config.getPlotType();
             landPrice = config.getLandPrice();
             landPermission = config.getLandPermission();
             return this;
