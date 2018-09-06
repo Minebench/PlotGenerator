@@ -17,22 +17,25 @@ package de.minebench.plotgenerator;
  */
 
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.CuboidClipboard;
-import com.sk89q.worldedit.Location;
 import com.sk89q.worldedit.Vector;
-import com.sk89q.worldedit.bukkit.BukkitUtil;
+import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.schematic.SchematicFormat;
+import com.sk89q.worldedit.util.Location;
+import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.flags.DefaultFlag;
+import com.sk89q.worldguard.protection.flags.BooleanFlag;
+import com.sk89q.worldguard.protection.flags.DoubleFlag;
+import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import de.minebench.plotgenerator.commands.BuyPlotCommand;
 import de.minebench.plotgenerator.commands.PlotGeneratorCommand;
 import de.minebench.plotsigns.PlotSigns;
-import me.ChrisvA.MbRegionConomy.MbRegionConomy;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -53,7 +56,6 @@ import java.util.regex.Pattern;
 public final class PlotGenerator extends JavaPlugin {
 
     private WorldGuardPlugin worldGuard = null;
-    private MbRegionConomy regionConomy = null;
     private PlotSigns plotSigns;
 
     private Economy economy;
@@ -63,6 +65,23 @@ public final class PlotGenerator extends JavaPlugin {
     private Map<RegionIntent, Boolean> regionIntents = new ConcurrentHashMap<>();
     private Map<String, Integer> regionIds = new HashMap<>();
     private int regionCreatorTask = -1;
+
+    public static BooleanFlag BUYABLE_FLAG = new BooleanFlag("buyable");
+    public static DoubleFlag PRICE_FLAG = new DoubleFlag("price");
+
+    @Override
+    public void onLoad() {
+        BUYABLE_FLAG = registerOrgetFlag(BUYABLE_FLAG);
+        PRICE_FLAG = registerOrgetFlag(PRICE_FLAG);
+    }
+
+    private <T extends Flag> T registerOrgetFlag(T flag) {
+        try {
+            return Flags.register(flag);
+        } catch (FlagConflictException | IllegalStateException e) {
+            return (T) Flags.get(flag.getName());
+        }
+    }
 
     @Override
     public void onEnable() {
@@ -98,13 +117,6 @@ public final class PlotGenerator extends JavaPlugin {
         return worldGuard;
     }
 
-    public MbRegionConomy getRegionConomy() {
-        if (regionConomy == null && getServer().getPluginManager().isPluginEnabled("MbRegionConomy")) {
-            regionConomy = MbRegionConomy.getPlugin(MbRegionConomy.class);
-        }
-        return regionConomy;
-    }
-
     public PlotSigns getPlotSigns() {
         if (plotSigns == null && getServer().getPluginManager().isPluginEnabled("PlotSigns")) {
             plotSigns = PlotSigns.getPlugin(PlotSigns.class);
@@ -126,7 +138,7 @@ public final class PlotGenerator extends JavaPlugin {
         return economy;
     }
 
-    public CuboidClipboard loadSchematic(String schematicName) {
+    public PlotSchematic loadSchematic(String schematicName) {
         if (schematicName == null || schematicName.isEmpty()) {
             return null;
         }
@@ -146,7 +158,7 @@ public final class PlotGenerator extends JavaPlugin {
             return null;
         }
         try {
-            return schemFormat.load(file);
+            return new PlotSchematic(schemFormat.load(file));
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Error loading file " + file.getAbsolutePath(), e);
             return null;
@@ -183,7 +195,7 @@ public final class PlotGenerator extends JavaPlugin {
                 RegionIntent intent = intents.next().getKey();
                 intents.remove();
                 if (getWorldGuard() != null) {
-                    RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
+                    RegionManager manager = getRegionManager(intent.getWorld());
                     if (testForRegion(intent)) {
                         if (intent.getSign() != null) {
                             registerBuySign(intent);
@@ -196,10 +208,10 @@ public final class PlotGenerator extends JavaPlugin {
                     double tpX = region.getMinimumPoint().getX() + (region.getMaximumPoint().getX() - region.getMinimumPoint().getX()) / 2;
                     double tpZ = region.getMaximumPoint().getZ();
                     double tpY = intent.getWorld().getHighestBlockYAt((int) tpX, (int) tpZ) + 1;
-                    region.setFlag(DefaultFlag.TELE_LOC, new Location(BukkitUtil.getLocalWorld(intent.getWorld()), new Vector(tpX,tpY,tpZ), 180, 0));
+                    region.setFlag(Flags.TELE_LOC, new Location(new BukkitWorld(intent.getWorld()), new Vector(tpX,tpY,tpZ), 180, 0));
                     if (intent.getConfig().getRegionPrice() > 0) {
-                        region.setFlag(DefaultFlag.BUYABLE, true);
-                        region.setFlag(DefaultFlag.PRICE, intent.getConfig().getRegionPrice());
+                        region.setFlag(BUYABLE_FLAG, true);
+                        region.setFlag(PRICE_FLAG, intent.getConfig().getRegionPrice());
                     }
                     if (intent.getConfig().getPlotType() != null && !intent.getConfig().getPlotType().isEmpty() && getPlotSigns() != null) {
                         region.setFlag(PlotSigns.PLOT_TYPE_FLAG, intent.getConfig().getPlotType());
@@ -217,7 +229,7 @@ public final class PlotGenerator extends JavaPlugin {
     }
 
     private void registerBuySign(RegionIntent intent) {
-        if (getWorldGuard() == null || (getRegionConomy() == null || intent.getConfig().getLandPrice() < 0) && (getPlotSigns() == null || intent.getConfig().getRegionPrice() < 0)) {
+        if (getWorldGuard() == null || getPlotSigns() == null || intent.getConfig().getRegionPrice() < 0) {
             return;
         }
 
@@ -228,52 +240,20 @@ public final class PlotGenerator extends JavaPlugin {
             return;
         }
 
-        if (getPlotSigns() != null) {
-            Block block = intent.getWorld().getBlockAt(intent.getSign().getBlockX(), intent.getSign().getBlockY(), intent.getSign().getBlockZ());
-            if (block.getState() instanceof Sign) {
-                Sign sign = (Sign) block.getState();
-                try {
-                    String[] lines = getPlotSigns().getSignLines(region);
-                    for (int i = 0; i < lines.length; i++) {
-                        sign.setLine(i, lines[i]);
-                    }
-                    sign.update();
-                    getLogger().log(Level.INFO, "Wrote PlotSigns sign for region " + intent.getWorld().getName() + "/" + region.getId() + " at " + intent.getSign());
-                } catch (IllegalArgumentException e) {
-                    getLogger().log(Level.SEVERE, "Could not create PlotSigns sign! ", e);
+        Block block = intent.getWorld().getBlockAt(intent.getSign().getBlockX(), intent.getSign().getBlockY(), intent.getSign().getBlockZ());
+        if (block.getState() instanceof Sign) {
+            Sign sign = (Sign) block.getState();
+            try {
+                String[] lines = getPlotSigns().getSignLines(region);
+                for (int i = 0; i < lines.length; i++) {
+                    sign.setLine(i, lines[i]);
                 }
+                sign.update();
+                getLogger().log(Level.INFO, "Wrote PlotSigns sign for region " + intent.getWorld().getName() + "/" + region.getId() + " at " + intent.getSign());
+            } catch (IllegalArgumentException e) {
+                getLogger().log(Level.SEVERE, "Could not create PlotSigns sign! ", e);
             }
-        } else if (getRegionConomy() != null) {
-            registerRegionConomySign(region, intent);
         }
-    }
-
-    private void registerRegionConomySign(ProtectedRegion region, RegionIntent intent) {
-        getServer().getScheduler().runTaskAsynchronously(this, () -> {
-            region.setFlag(DefaultFlag.BUYABLE, true);
-            getRegionConomy().getRegionDatabase().insertRegion(intent.getWorld().getName(), region.getId(), intent.getConfig().getLandPrice());
-            if (intent.getConfig().getLandPermission() != null && !intent.getConfig().getLandPermission().isEmpty()) {
-                getRegionConomy().getRegionDatabase().updatePermission(intent.getWorld().getName(), region.getId(), intent.getConfig().getLandPermission());
-            }
-            getLogger().log(Level.INFO, "Made region " + intent.getWorld().getName() + "/" + region.getId() + " buyable. Price: " + intent.getConfig().getLandPrice() + (intent.getConfig().getLandPermission() != null ? ", permission: " + intent.getConfig().getLandPermission() : ""));
-
-            String[] lines = new String[4];
-            lines[0] = getRegionConomy().getConf().getSignSell();
-            lines[1] = region.getId();
-            lines[2] = String.valueOf(intent.getConfig().getLandPrice());
-            lines[3] = intent.getConfig().getLandPermission();
-            getServer().getScheduler().runTask(this, () -> {
-                Block block = intent.getWorld().getBlockAt(intent.getSign().getBlockX(), intent.getSign().getBlockY(), intent.getSign().getBlockZ());
-                if (block.getState() instanceof Sign) {
-                    Sign sign = (Sign) block.getState();
-                    for (int i = 0; i < lines.length; i++) {
-                        sign.setLine(i, lines[i]);
-                    }
-                    sign.update();
-                    getLogger().log(Level.INFO, "Wrote MbRegionConomy sign for region " + intent.getWorld().getName() + "/" + region.getId() + " at " + intent.getSign());
-                }
-            });
-        });
     }
 
     /**
@@ -281,7 +261,7 @@ public final class PlotGenerator extends JavaPlugin {
      * @return
      */
     private String getNewRegionId(RegionIntent intent) {
-        RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
+        RegionManager manager = getRegionManager(intent.getWorld());
         String mapKey = intent.getWorld().getName() + "_" + intent.getConfig().getRegionId();
         int idNumber = 0;
         if (regionIds.containsKey(mapKey)) {
@@ -317,7 +297,7 @@ public final class PlotGenerator extends JavaPlugin {
         String regionRegexString = intent.getConfig().getRegionId().replace("%world%", "\\w+");
         regionRegexString = regionRegexString.contains("%number%") ? regionRegexString.replace("%number%", "\\d+") : regionRegexString + "\\d+";
         Pattern regionRegex = Pattern.compile("^" + regionRegexString + "$");
-        RegionManager manager = getWorldGuard().getRegionManager(intent.getWorld());
+        RegionManager manager = getRegionManager(intent.getWorld());
         ApplicableRegionSet regions = manager.getApplicableRegions(loc);
         for (ProtectedRegion region : regions) {
             if (regionRegex.matcher(region.getId()).matches()) {
@@ -325,5 +305,9 @@ public final class PlotGenerator extends JavaPlugin {
             }
         }
         return null;
+    }
+
+    public static RegionManager getRegionManager(World world) {
+        return WorldGuard.getInstance().getPlatform().getRegionContainer().get(new BukkitWorld(world));
     }
 }

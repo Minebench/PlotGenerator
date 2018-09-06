@@ -16,16 +16,20 @@ package de.minebench.plotgenerator.commands;
  * along with this program. If not, see <http://mozilla.org/MPL/2.0/>.
  */
 
+import com.sk89q.worldedit.Vector;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.flags.DefaultFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import de.minebench.plotgenerator.PlotGenerator;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import static de.minebench.plotgenerator.PlotGenerator.BUYABLE_FLAG;
+import static de.minebench.plotgenerator.PlotGenerator.PRICE_FLAG;
 
 public class BuyPlotCommand implements CommandExecutor {
     private final PlotGenerator plugin;
@@ -59,10 +63,10 @@ public class BuyPlotCommand implements CommandExecutor {
             String cmdPerm = command.getPermission();
             command.setPermission(cmdPerm + ".byregionid");
             if (command.testPermission(sender)) {
-                ProtectedRegion r = plugin.getWorldGuard().getRegionManager(player.getWorld()).getRegion(args[0]);
+                ProtectedRegion r = PlotGenerator.getRegionManager(player.getWorld()).getRegion(args[0]);
                 if (r == null) {
                     sender.sendMessage(ChatColor.RED + "No region found with the id " + ChatColor.YELLOW + args[0]);
-                } else if (r.getFlag(DefaultFlag.BUYABLE) != null && r.getFlag(DefaultFlag.BUYABLE) && r.getFlag(DefaultFlag.PRICE) != null && r.getFlag(DefaultFlag.PRICE) > 0) {
+                } else if (r.getFlag(BUYABLE_FLAG) != null && r.getFlag(BUYABLE_FLAG) && r.getFlag(PRICE_FLAG) != null && r.getFlag(PRICE_FLAG) > 0) {
                     region = r;
                 } else {
                     sender.sendMessage(ChatColor.RED + "The region " + ChatColor.YELLOW + args[0] + ChatColor.RED + " is not buyable!");
@@ -70,9 +74,10 @@ public class BuyPlotCommand implements CommandExecutor {
             }
             command.setPermission(cmdPerm);
         } else {
-            ApplicableRegionSet regions = plugin.getWorldGuard().getRegionManager(player.getWorld()).getApplicableRegions(player.getLocation());
+            Location l = player.getLocation();
+            ApplicableRegionSet regions = PlotGenerator.getRegionManager(player.getWorld()).getApplicableRegions(new Vector(l.getX(), l.getY(), l.getZ()));
             for (ProtectedRegion r : regions.getRegions()) {
-                if (r.getFlag(DefaultFlag.BUYABLE) != null && r.getFlag(DefaultFlag.BUYABLE) && r.getFlag(DefaultFlag.PRICE) != null && r.getFlag(DefaultFlag.PRICE) > 0) {
+                if (r.getFlag(BUYABLE_FLAG) != null && r.getFlag(BUYABLE_FLAG) && r.getFlag(PRICE_FLAG) != null && r.getFlag(PRICE_FLAG) > 0) {
                     region = r;
                 }
             }
@@ -85,10 +90,10 @@ public class BuyPlotCommand implements CommandExecutor {
             return true;
         }
 
-        double price = region.getFlag(DefaultFlag.PRICE);
+        double price = region.getFlag(PRICE_FLAG);
         EconomyResponse response = plugin.getEconomy().withdrawPlayer(player, price);
         if (response.transactionSuccess()) {
-            region.setFlag(DefaultFlag.BUYABLE, false);
+            region.setFlag(BUYABLE_FLAG, false);
             region.getOwners().clear();
             region.getOwners().addPlayer(player.getUniqueId());
             region.getMembers().clear();

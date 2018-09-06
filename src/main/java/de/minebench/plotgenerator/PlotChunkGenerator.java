@@ -17,11 +17,10 @@ package de.minebench.plotgenerator;
  */
 
 import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.CuboidClipboard;
-import com.sk89q.worldedit.blocks.BaseBlock;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.generator.ChunkGenerator;
 
 import java.util.Random;
@@ -46,7 +45,7 @@ public class PlotChunkGenerator extends ChunkGenerator {
         ChunkData data = createChunkData(world);
         PlotGeneratorConfig config = getConfig(world);
         if (config != null && config.getSchematic() != null && !BlockVector.ZERO.equals(config.getSchematic().getSize())) {
-            CuboidClipboard schematic = config.getSchematic();
+            PlotSchematic schematic = config.getSchematic();
             BlockVector center = config.getCenter();
             int width = schematic.getWidth() - config.getOverlap();
             int startX = (x * 16 - center.getBlockX()) % width;
@@ -65,9 +64,9 @@ public class PlotChunkGenerator extends ChunkGenerator {
                 for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
                     int schemZ = (startZ + chunkZ) % length;
                     for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
-                        BaseBlock block = schematic.getBlock(new BlockVector(schemX, chunkY, schemZ));
-                        data.setBlock(chunkX, chunkY, chunkZ, block.getId(), (byte) block.getData());
-                        if (sign == null && block.getId() == Material.SIGN_POST.getId() || block.getId() == Material.WALL_SIGN.getId()) {
+                        BlockData block = schematic.getBlock(schemX, chunkY, schemZ);
+                        data.setBlock(chunkX, chunkY, chunkZ, block);
+                        if (sign == null && (block.getMaterial() == Material.SIGN || block.getMaterial() == Material.WALL_SIGN)) {
                             sign = new BlockVector(x * 16 + chunkX, chunkY, z * 16 + chunkZ);
                         }
                     }

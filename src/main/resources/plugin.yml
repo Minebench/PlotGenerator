@@ -3,9 +3,10 @@ version: '${minecraft.plugin.version}'
 main: de.minebench.plotgenerator.PlotGenerator
 load: STARTUP
 depend: [WorldEdit]
-softdepend: [PlotSigns,MbRegionConomy,WorldGuard,Vault]
+softdepend: [PlotSigns,WorldGuard,Vault]
 authors: [Phoenix616]
 description: ${project.description}
+api-version: "1.13"
 commands:
    plotgenerator:
       aliases: [plotgen]

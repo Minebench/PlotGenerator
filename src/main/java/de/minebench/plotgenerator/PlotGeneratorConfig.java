@@ -26,7 +26,7 @@ import java.util.logging.Level;
 public class PlotGeneratorConfig {
 
     private final String id;
-    private final CuboidClipboard schematic;
+    private final PlotSchematic schematic;
     private final BlockVector center;
     private final int overlap;
     private final String regionId;
@@ -35,10 +35,8 @@ public class PlotGeneratorConfig {
     private final int regionMaxY;
     private final double regionPrice;
     private final String plotType;
-    private final double landPrice;
-    private final String landPermission;
 
-    public PlotGeneratorConfig(String id, CuboidClipboard schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotType, double landPrice, String landPermission) {
+    public PlotGeneratorConfig(String id, PlotSchematic schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotType) {
         this.id = id;
         this.schematic = schematic;
         this.center = center;
@@ -49,8 +47,6 @@ public class PlotGeneratorConfig {
         this.regionMaxY = regionMaxY;
         this.regionPrice = regionPrice;
         this.plotType = plotType;
-        this.landPrice = landPrice;
-        this.landPermission = landPermission;
     }
 
     public static PlotGeneratorConfig fromId(PlotGenerator plugin, String id) {
@@ -123,14 +119,6 @@ public class PlotGeneratorConfig {
                     }
                 } else if ("plotType".equalsIgnoreCase(parts[0])) {
                     b.plotType(parts[1]);
-                } else if ("landPrice".equalsIgnoreCase(parts[0])) {
-                    try {
-                        b.landPrice(Double.parseDouble(parts[1]));
-                    } catch (NumberFormatException e) {
-                        plugin.getLogger().log(Level.SEVERE, "Can't parse land price from " + parts[1] + "!", e);
-                    }
-                } else if ("landPermission".equalsIgnoreCase(parts[0])) {
-                    b.landPermission(parts[1]);
                 }
             }
         }
@@ -183,17 +171,11 @@ public class PlotGeneratorConfig {
         if (config.contains("plotsigns.type")) {
             b.plotType(config.getString("plotsigns.type"));
         }
-        if (config.contains("land.price")) {
-            b.landPrice(config.getDouble("land.price"));
-        }
-        if (config.contains("land.permission")) {
-            b.landPermission(config.getString("land.permission"));
-        }
 
         return b.build();
     }
 
-    public CuboidClipboard getSchematic() {
+    public PlotSchematic getSchematic() {
         return schematic;
     }
 
@@ -229,14 +211,6 @@ public class PlotGeneratorConfig {
         return plotType;
     }
 
-    public double getLandPrice() {
-        return landPrice;
-    }
-
-    public String getLandPermission() {
-        return landPermission;
-    }
-
     public String getId() {
         return id;
     }
@@ -244,7 +218,7 @@ public class PlotGeneratorConfig {
     public static class Builder {
 
         private String id;
-        private CuboidClipboard schematic = null;
+        private PlotSchematic schematic = null;
         private Vector center = new Vector(0, 0, 0);
         private int overlap = 0;
         private String regionId = null;
@@ -266,7 +240,7 @@ public class PlotGeneratorConfig {
             return this.schematic(name, plugin.loadSchematic(name));
         }
 
-        public Builder schematic(String name, CuboidClipboard schematic) {
+        public Builder schematic(String name, PlotSchematic schematic) {
             if (schematic == null) {
                 plugin.getLogger().log(Level.WARNING, "Schematic " + name + "not found?");
                 return this;
@@ -355,7 +329,7 @@ public class PlotGeneratorConfig {
         }
 
         public PlotGeneratorConfig build() {
-            return new PlotGeneratorConfig(id, schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, plotType, landPrice, landPermission);
+            return new PlotGeneratorConfig(id, schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, plotType);
         }
 
         public Builder copy(PlotGeneratorConfig config) {
@@ -368,8 +342,6 @@ public class PlotGeneratorConfig {
             regionMaxY = config.getRegionMaxY();
             regionPrice = config.getRegionPrice();
             plotType = config.getPlotType();
-            landPrice = config.getLandPrice();
-            landPermission = config.getLandPermission();
             return this;
         }
 
