@@ -18,17 +18,17 @@ package de.minebench.plotgenerator;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.math.BlockVector3;
 import org.bukkit.World;
 
 class RegionIntent {
     private final World world;
     private PlotGeneratorConfig config;
-    private final BlockVector minPoint;
-    private final BlockVector maxPoint;
-    private BlockVector sign = null;
+    private final BlockVector3 minPoint;
+    private final BlockVector3 maxPoint;
+    private BlockVector3 sign = null;
 
-    public RegionIntent(World world, PlotGeneratorConfig config, BlockVector minPoint, BlockVector maxPoint) {
+    public RegionIntent(World world, PlotGeneratorConfig config, BlockVector3 minPoint, BlockVector3 maxPoint) {
         this.world = world;
         this.config = config;
         this.minPoint = minPoint;
@@ -43,11 +43,11 @@ class RegionIntent {
         return config;
     }
 
-    public BlockVector getMinPoint() {
+    public BlockVector3 getMinPoint() {
         return minPoint;
     }
 
-    public BlockVector getMaxPoint() {
+    public BlockVector3 getMaxPoint() {
         return maxPoint;
     }
 
@@ -61,11 +61,11 @@ class RegionIntent {
         return toString().hashCode();
     }
 
-    public void setSign(BlockVector regionConomySign) {
+    public void setSign(BlockVector3 regionConomySign) {
         this.sign = regionConomySign;
     }
 
-    public BlockVector getSign() {
+    public BlockVector3 getSign() {
         return sign;
     }
 

@@ -18,9 +18,7 @@ package de.minebench.plotgenerator;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.CuboidClipboard;
-import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.math.BlockVector3;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.logging.Level;
@@ -29,7 +27,7 @@ public class PlotGeneratorConfig {
 
     private final String id;
     private final PlotSchematic schematic;
-    private final BlockVector center;
+    private final BlockVector3 center;
     private final int overlap;
     private final String regionId;
     private final int regionInset;
@@ -38,7 +36,7 @@ public class PlotGeneratorConfig {
     private final double regionPrice;
     private final String plotType;
 
-    public PlotGeneratorConfig(String id, PlotSchematic schematic, BlockVector center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotType) {
+    public PlotGeneratorConfig(String id, PlotSchematic schematic, BlockVector3 center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotType) {
         this.id = id;
         this.schematic = schematic;
         this.center = center;
@@ -181,7 +179,7 @@ public class PlotGeneratorConfig {
         return schematic;
     }
 
-    public BlockVector getCenter() {
+    public BlockVector3 getCenter() {
         return center;
     }
 
@@ -221,7 +219,7 @@ public class PlotGeneratorConfig {
 
         private String id;
         private PlotSchematic schematic = null;
-        private Vector center = new Vector(0, 0, 0);
+        private BlockVector3 center = BlockVector3.at(0, 0, 0);
         private int overlap = 0;
         private String regionId = null;
         private int regionInset = 0;
@@ -252,26 +250,26 @@ public class PlotGeneratorConfig {
             return this;
         }
 
-        public Builder center(Vector center) {
+        public Builder center(BlockVector3 center) {
             this.center = center;
             plugin.getLogger().log(Level.INFO, "Center: " + center);
             return this;
         }
 
-        public Builder centerX(double x) {
-            center = center.setX(x);
+        public Builder centerX(int x) {
+            center = center.withX(x);
             plugin.getLogger().log(Level.INFO, "Center x: " + x);
             return this;
         }
 
-        public Builder centerY(double y) {
-            center = center.setY(y);
+        public Builder centerY(int y) {
+            center = center.withY(y);
             plugin.getLogger().log(Level.INFO, "Center y: " + y);
             return this;
         }
 
-        public Builder centerZ(double z) {
-            center = center.setZ(z);
+        public Builder centerZ(int z) {
+            center = center.withZ(z);
             plugin.getLogger().log(Level.INFO, "Center z: " + z);
             return this;
         }
@@ -331,7 +329,7 @@ public class PlotGeneratorConfig {
         }
 
         public PlotGeneratorConfig build() {
-            return new PlotGeneratorConfig(id, schematic, new BlockVector(center), overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, plotType);
+            return new PlotGeneratorConfig(id, schematic, center, overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, plotType);
         }
 
         public Builder copy(PlotGeneratorConfig config) {

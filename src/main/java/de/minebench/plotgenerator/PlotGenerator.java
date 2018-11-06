@@ -18,12 +18,16 @@ package de.minebench.plotgenerator;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.BukkitWorld;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldedit.schematic.SchematicFormat;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector3;
 import com.sk89q.worldedit.util.Location;
+import com.sk89q.worldedit.util.io.Closer;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
@@ -47,7 +51,10 @@ import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -154,16 +161,27 @@ public final class PlotGenerator extends JavaPlugin {
             return null;
         }
 
-        SchematicFormat schemFormat = SchematicFormat.getFormat(file);
-        if (schemFormat == null) {
+        ClipboardFormat format = ClipboardFormats.findByFile(file);
+        if (format == null) {
             getLogger().log(Level.SEVERE, "Could not load schematic format from file " + file.getAbsolutePath() + "!");
             return null;
         }
+
         try {
-            return new PlotSchematic(schemFormat.load(file));
+            return new PlotSchematic(loadSchematicFromFile(file, format));
         } catch (Exception e) {
             getLogger().log(Level.SEVERE, "Error loading file " + file.getAbsolutePath(), e);
             return null;
+        }
+    }
+
+    private Clipboard loadSchematicFromFile(File file, ClipboardFormat format) throws IOException {
+        try (Closer closer = Closer.create()) {
+            FileInputStream fis = closer.register(new FileInputStream(file));
+            BufferedInputStream bis = closer.register(new BufferedInputStream(fis));
+            ClipboardReader reader = closer.register(format.getReader(bis));
+
+            return reader.read();
         }
     }
 
@@ -210,7 +228,7 @@ public final class PlotGenerator extends JavaPlugin {
                     double tpX = region.getMinimumPoint().getX() + (region.getMaximumPoint().getX() - region.getMinimumPoint().getX()) / 2;
                     double tpZ = region.getMaximumPoint().getZ();
                     double tpY = intent.getWorld().getHighestBlockYAt((int) tpX, (int) tpZ) + 1;
-                    region.setFlag(Flags.TELE_LOC, new Location(new BukkitWorld(intent.getWorld()), new Vector(tpX,tpY,tpZ), 180, 0));
+                    region.setFlag(Flags.TELE_LOC, new Location(new BukkitWorld(intent.getWorld()), Vector3.at(tpX, tpY, tpZ), 180, 0));
                     if (intent.getConfig().getRegionPrice() > 0) {
                         region.setFlag(BUYABLE_FLAG, true);
                         region.setFlag(PRICE_FLAG, intent.getConfig().getRegionPrice());
@@ -295,7 +313,7 @@ public final class PlotGenerator extends JavaPlugin {
      * @param intent
      * @return
      */
-    private ProtectedRegion getSimilarRegion(RegionIntent intent, BlockVector loc) {
+    private ProtectedRegion getSimilarRegion(RegionIntent intent, BlockVector3 loc) {
         String regionRegexString = intent.getConfig().getRegionId().replace("%world%", "\\w+");
         regionRegexString = regionRegexString.contains("%number%") ? regionRegexString.replace("%number%", "\\d+") : regionRegexString + "\\d+";
         Pattern regionRegex = Pattern.compile("^" + regionRegexString + "$");

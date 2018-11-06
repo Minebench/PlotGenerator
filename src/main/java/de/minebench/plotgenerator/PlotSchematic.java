@@ -18,23 +18,20 @@ package de.minebench.plotgenerator;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.sk89q.worldedit.BlockVector;
-import com.sk89q.worldedit.CuboidClipboard;
-import com.sk89q.worldedit.Vector;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BlockStateHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.block.data.BlockData;
 
 public class PlotSchematic {
-    private final Vector size;
-    private final Vector offset;
-    private final Vector origin;
+    private final BlockVector3 size;
+    private final BlockVector3 origin;
 
     private final BlockData[][][] blocks;
 
-    public PlotSchematic(CuboidClipboard clipboard) {
-        size = clipboard.getSize();
-        offset = clipboard.getOffset();
+    public PlotSchematic(Clipboard clipboard) {
+        size = clipboard.getDimensions();
         origin = clipboard.getOrigin();
 
         blocks = new BlockData[getWidth()][getLength()][getHeight()];
@@ -42,7 +39,7 @@ public class PlotSchematic {
         for (int x = 0; x < getWidth(); x++) {
             for (int z = 0; z < getLength(); z++) {
                 for (int y = 0; y < getHeight(); y++) {
-                    BlockStateHolder block = clipboard.getBlock(new BlockVector(x, y, z));
+                    BlockStateHolder block = clipboard.getBlock(BlockVector3.at(x, y, z));
                     setBlock(x, y, z, Bukkit.createBlockData(block.getAsString()));
                 }
             }
@@ -58,15 +55,11 @@ public class PlotSchematic {
         return blocks[x][y][z];
     }
 
-    public Vector getSize() {
+    public BlockVector3 getSize() {
         return size;
     }
 
-    public Vector getOffset() {
-        return offset;
-    }
-
-    public Vector getOrigin() {
+    public BlockVector3 getOrigin() {
         return origin;
     }
 
@@ -84,6 +77,6 @@ public class PlotSchematic {
 
     @Override
     public String toString() {
-        return "PlotSchematic{size=" + size + ",offset =" + offset + ",origin=" + origin + "}";
+        return "PlotSchematic{size=" + size + ",origin=" + origin + "}";
     }
 }

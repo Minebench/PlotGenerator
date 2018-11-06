@@ -18,7 +18,7 @@ package de.minebench.plotgenerator;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.sk89q.worldedit.BlockVector;
+import com.sk89q.worldedit.math.BlockVector3;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -46,9 +46,9 @@ public class PlotChunkGenerator extends ChunkGenerator {
     public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) {
         ChunkData data = createChunkData(world);
         PlotGeneratorConfig config = getConfig(world);
-        if (config != null && config.getSchematic() != null && !BlockVector.ZERO.equals(config.getSchematic().getSize())) {
+        if (config != null && config.getSchematic() != null && !BlockVector3.ZERO.equals(config.getSchematic().getSize())) {
             PlotSchematic schematic = config.getSchematic();
-            BlockVector center = config.getCenter();
+            BlockVector3 center = config.getCenter();
             int width = schematic.getWidth() - config.getOverlap();
             int startX = (x * 16 - center.getBlockX()) % width;
             while (startX < 0) {
@@ -60,7 +60,7 @@ public class PlotChunkGenerator extends ChunkGenerator {
                 startZ = length + startZ;
             }
 
-            BlockVector sign = null;
+            BlockVector3 sign = null;
             for (int chunkX = 0; chunkX < 16; chunkX++) {
                 int schemX = (startX + chunkX) % width;
                 for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
@@ -69,19 +69,19 @@ public class PlotChunkGenerator extends ChunkGenerator {
                         BlockData block = schematic.getBlock(schemX, chunkY, schemZ);
                         data.setBlock(chunkX, chunkY, chunkZ, block);
                         if (sign == null && (block.getMaterial() == Material.SIGN || block.getMaterial() == Material.WALL_SIGN)) {
-                            sign = new BlockVector(x * 16 + chunkX, chunkY, z * 16 + chunkZ);
+                            sign = BlockVector3.at(x * 16 + chunkX, chunkY, z * 16 + chunkZ);
                         }
                     }
                 }
             }
 
             if (plugin.getWorldGuard() != null && config.getRegionId() != null) {
-                BlockVector minPoint = new BlockVector(
+                BlockVector3 minPoint = BlockVector3.at(
                         x * 16 - startX + config.getRegionInset(),
                         config.getRegionMinY(),
                         z * 16 - startZ + config.getRegionInset()
                 );
-                BlockVector maxPoint = new BlockVector(
+                BlockVector3 maxPoint = BlockVector3.at(
                         minPoint.getBlockX() + width - 2 * config.getRegionInset(),
                         config.getRegionMaxY(),
                         minPoint.getBlockZ() + length - 2 * config.getRegionInset()
