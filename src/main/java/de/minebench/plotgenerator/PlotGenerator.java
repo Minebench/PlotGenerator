@@ -80,13 +80,14 @@ public final class PlotGenerator extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        BUYABLE_FLAG = registerOrgetFlag(BUYABLE_FLAG);
-        PRICE_FLAG = registerOrgetFlag(PRICE_FLAG);
+        BUYABLE_FLAG = registerOrGetFlag(BUYABLE_FLAG);
+        PRICE_FLAG = registerOrGetFlag(PRICE_FLAG);
     }
 
-    private <T extends Flag> T registerOrgetFlag(T flag) {
+    private <T extends Flag> T registerOrGetFlag(T flag) {
         try {
-            return Flags.register(flag);
+            WorldGuard.getInstance().getFlagRegistry().register(flag);
+            return flag;
         } catch (FlagConflictException | IllegalStateException e) {
             return (T) Flags.get(flag.getName());
         }
