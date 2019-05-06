@@ -89,7 +89,7 @@ public final class PlotGenerator extends JavaPlugin {
             WorldGuard.getInstance().getFlagRegistry().register(flag);
             return flag;
         } catch (FlagConflictException | IllegalStateException e) {
-            return (T) Flags.get(flag.getName());
+            return (T) WorldGuard.getInstance().getFlagRegistry().get(flag.getName());
         }
     }
 
