@@ -20,9 +20,10 @@ package de.minebench.plotgenerator;
 
 import com.sk89q.worldedit.math.BlockVector3;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Sign;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.generator.ChunkGenerator;
 
 import java.util.Random;
@@ -68,7 +69,7 @@ public class PlotChunkGenerator extends ChunkGenerator {
                     for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
                         BlockData block = schematic.getBlock(schemX, chunkY, schemZ);
                         data.setBlock(chunkX, chunkY, chunkZ, block);
-                        if (sign == null && (block.getMaterial() == Material.SIGN || block.getMaterial() == Material.WALL_SIGN)) {
+                        if (sign == null && (block instanceof Sign || block instanceof WallSign)) {
                             sign = BlockVector3.at(x * 16 + chunkX, chunkY, z * 16 + chunkZ);
                         }
                     }
