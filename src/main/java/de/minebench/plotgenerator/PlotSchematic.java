@@ -18,10 +18,9 @@ package de.minebench.plotgenerator;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.world.block.BlockStateHolder;
-import org.bukkit.Bukkit;
 import org.bukkit.block.data.BlockData;
 
 public class PlotSchematic {
@@ -39,8 +38,7 @@ public class PlotSchematic {
         for (int x = 0; x < getWidth(); x++) {
             for (int z = 0; z < getLength(); z++) {
                 for (int y = 0; y < getHeight(); y++) {
-                    BlockStateHolder block = clipboard.getBlock(BlockVector3.at(x, y, z));
-                    setBlock(x, y, z, Bukkit.createBlockData(block.getAsString()));
+                    setBlock(x, y, z, BukkitAdapter.adapt(clipboard.getBlock(BlockVector3.at(x, y, z))));
                 }
             }
         }
