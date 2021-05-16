@@ -33,7 +33,7 @@ public class PlotSchematic {
         size = clipboard.getDimensions();
         origin = clipboard.getOrigin();
 
-        blocks = new BlockData[getWidth()][getLength()][getHeight()];
+        blocks = new BlockData[getWidth()][getHeight()][getLength()];
 
         for (int x = 0; x < getWidth(); x++) {
             for (int z = 0; z < getLength(); z++) {
