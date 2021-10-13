@@ -48,6 +48,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -269,6 +270,7 @@ public final class PlotGenerator extends JavaPlugin {
                 for (int i = 0; i < lines.length; i++) {
                     sign.setLine(i, lines[i]);
                 }
+                sign.getPersistentDataContainer().set(PlotSigns.SIGN_REGION_KEY, PersistentDataType.STRING, region.getId());
                 sign.update();
                 getLogger().log(Level.INFO, "Wrote PlotSigns sign for region " + intent.getWorld().getName() + "/" + region.getId() + " at " + intent.getSign());
             } catch (IllegalArgumentException e) {
