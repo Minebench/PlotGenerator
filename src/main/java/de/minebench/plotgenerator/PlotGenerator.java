@@ -81,8 +81,10 @@ public final class PlotGenerator extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        BUYABLE_FLAG = registerOrGetFlag(BUYABLE_FLAG);
-        PRICE_FLAG = registerOrGetFlag(PRICE_FLAG);
+        if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+            BUYABLE_FLAG = registerOrGetFlag(BUYABLE_FLAG);
+            PRICE_FLAG = registerOrGetFlag(PRICE_FLAG);
+        }
     }
 
     private <T extends Flag> T registerOrGetFlag(T flag) {
