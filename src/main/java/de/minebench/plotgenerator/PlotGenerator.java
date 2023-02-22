@@ -156,7 +156,13 @@ public final class PlotGenerator extends JavaPlugin {
             return null;
         }
 
-        File file = new File(getDataFolder(), schematicName + ".schematic");
+        File file = new File(getDataFolder(), schematicName + ".schem");
+        if (!file.exists()){
+            file = new File(weSchemDir, schematicName + ".schem");
+        }
+        if (!file.exists()){
+            file = new File(getDataFolder(), schematicName + ".schematic");
+        }
         if (!file.exists()){
             file = new File(weSchemDir, schematicName + ".schematic");
         }
