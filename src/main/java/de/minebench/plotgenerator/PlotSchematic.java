@@ -21,67 +21,59 @@ package de.minebench.plotgenerator;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.world.block.BlockState;
+import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
 
 public class PlotSchematic {
-    private final BlockVector3 size;
-    private final BlockVector3 origin;
-
-    private final BlockData[][][] blocks;
+    private final Clipboard clipboard;
+    private final BlockVector3 dimensions;
 
     public PlotSchematic(Clipboard clipboard) {
-        size = clipboard.getDimensions();
-        origin = clipboard.getOrigin();
+        this.clipboard = clipboard;
+        this.dimensions = clipboard.getDimensions();
+    }
 
-        blocks = new BlockData[getWidth()][getHeight()][getLength()];
-
-        BlockVector3 minimumPoint = clipboard.getMinimumPoint();
-        BlockVector3 maximumPoint = clipboard.getMaximumPoint();
-
-        for (int x = minimumPoint.getBlockX(); x < maximumPoint.getBlockX() + 1; x++) {
-            for (int z = minimumPoint.getBlockZ(); z < maximumPoint.getBlockZ() + 1; z++) {
-                for (int y = minimumPoint.getBlockY(); y < maximumPoint.getBlockY() + 1; y++) {
-                    BlockVector3 pos = BlockVector3.at(x, y, z);
-                    BlockData adapt = BukkitAdapter.adapt(clipboard.getBlock(pos));
-
-                    BlockVector3 relPos = pos.subtract(minimumPoint);
-                    setBlock(relPos.getBlockX(), relPos.getBlockY(), relPos.getBlockZ(), adapt);
-                }
-            }
+    public BlockData getBlock(int x, int y, int z) {
+        BlockVector3 pos = BlockVector3.at(x, y, z).add(clipboard.getMinimumPoint());
+        if (!pos.containedWithin(clipboard.getMinimumPoint(), clipboard.getMaximumPoint())) {
+            return Material.AIR.createBlockData();
         }
 
-    }
-
-    private void setBlock(int x, int y, int z, BlockData blockData) throws IndexOutOfBoundsException {
-        blocks[x][y][z] = blockData;
-    }
-
-    public BlockData getBlock(int x, int y, int z) throws IndexOutOfBoundsException {
-        return blocks[x][y][z];
+        BlockState blockState = clipboard.getBlock(pos);
+        return BukkitAdapter.adapt(blockState);
     }
 
     public BlockVector3 getSize() {
-        return size;
+        return dimensions;
     }
 
     public BlockVector3 getOrigin() {
-        return origin;
+        return clipboard.getOrigin();
     }
 
     public int getWidth() {
-        return size.getBlockX();
+        return dimensions.getBlockX();
     }
 
     public int getLength() {
-        return size.getBlockZ();
+        return dimensions.getBlockZ();
     }
 
     public int getHeight() {
-        return size.getBlockY();
+        return dimensions.getBlockY();
+    }
+
+    public int getMinY() {
+        return clipboard.getMinimumPoint().getBlockY();
+    }
+
+    public int getMaxY() {
+        return clipboard.getMaximumPoint().getBlockY();
     }
 
     @Override
     public String toString() {
-        return "PlotSchematic{size=" + size + ",origin=" + origin + "}";
+        return "PlotSchematic{size=" + getSize() + ",origin=" + getOrigin() + "}";
     }
 }
