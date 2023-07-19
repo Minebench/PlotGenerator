@@ -66,8 +66,8 @@ public class PlotChunkGenerator extends ChunkGenerator {
                 int schemX = (startX + chunkX) % width;
                 for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
                     int schemZ = (startZ + chunkZ) % length;
-                    for (int chunkY = schematic.getMinY(); chunkY < schematic.getMaxY() + 1; chunkY++) {
-                        BlockData block = schematic.getBlock(schemX, chunkY - schematic.getMinY(), schemZ);
+                    for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
+                        BlockData block = schematic.getBlock(schemX, chunkY, schemZ);
                         data.setBlock(chunkX, chunkY, chunkZ, block);
                         if (sign == null && (block instanceof Sign || block instanceof WallSign)) {
                             sign = BlockVector3.at(x * 16 + chunkX, chunkY, z * 16 + chunkZ);
