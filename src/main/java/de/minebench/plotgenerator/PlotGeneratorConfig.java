@@ -18,15 +18,17 @@ package de.minebench.plotgenerator;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.google.common.base.Suppliers;
 import com.sk89q.worldedit.math.BlockVector3;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 public class PlotGeneratorConfig {
 
     private final String id;
-    private final PlotSchematic schematic;
+    private final Supplier<PlotSchematic> schematic;
     private final BlockVector3 center;
     private final int overlap;
     private final String regionId;
@@ -36,9 +38,9 @@ public class PlotGeneratorConfig {
     private final double regionPrice;
     private final String plotType;
 
-    public PlotGeneratorConfig(String id, PlotSchematic schematic, BlockVector3 center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotType) {
+    public PlotGeneratorConfig(String id, Supplier<PlotSchematic> schematic, BlockVector3 center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotType) {
         this.id = id;
-        this.schematic = schematic;
+        this.schematic = Suppliers.memoize(schematic::get);
         this.center = center;
         this.overlap = overlap;
         this.regionId = regionId;
@@ -176,7 +178,7 @@ public class PlotGeneratorConfig {
     }
 
     public PlotSchematic getSchematic() {
-        return schematic;
+        return schematic.get();
     }
 
     public BlockVector3 getCenter() {
@@ -218,7 +220,7 @@ public class PlotGeneratorConfig {
     public static class Builder {
 
         private String id;
-        private PlotSchematic schematic = null;
+        private Supplier<PlotSchematic> schematic = Suppliers.ofInstance(null);
         private BlockVector3 center = BlockVector3.at(0, 0, 0);
         private int overlap = 0;
         private String regionId = null;
@@ -237,16 +239,21 @@ public class PlotGeneratorConfig {
         }
 
         public Builder schematic(String name) {
-            return this.schematic(name, plugin.loadSchematic(name));
+            return this.schematic(name, plugin.loadSchematic(name)::join);
         }
 
-        public Builder schematic(String name, PlotSchematic schematic) {
-            if (schematic == null) {
-                plugin.getLogger().log(Level.WARNING, "Schematic " + name + "not found?");
-                return this;
-            }
-            this.schematic = schematic;
-            plugin.getLogger().log(Level.INFO, "Schematic: " + name + " (size: " + (schematic == null ? "null" : schematic.getSize()) + ")");
+        public Builder schematic(String name, Supplier<PlotSchematic> schematicSupplier) {
+            this.schematic = () -> {
+                PlotSchematic schematic = schematicSupplier.get();
+                if (schematic == null) {
+                    plugin.getLogger().log(Level.WARNING, "Schematic " + name + "not found?");
+                    return null;
+                }
+
+                plugin.getLogger().log(Level.INFO, "Schematic: " + name + " (size: " + schematic.getSize() + ")");
+                return schematic;
+            };
+
             return this;
         }
 
@@ -333,7 +340,7 @@ public class PlotGeneratorConfig {
         }
 
         public Builder copy(PlotGeneratorConfig config) {
-            schematic = config.getSchematic();
+            schematic = config::getSchematic;
             center = config.getCenter();
             overlap = config.getOverlap();
             regionId = config.getRegionId();
