@@ -11,7 +11,7 @@ You can define all settings of the generator directly via the id string of the g
 
 To create the same worlds as displayed below in the config section you would use the following commands (in Multiverse):
 
-`/mv create test NORMAL -g PlotGenerator:testschematic,overlap=1,centerX=100,centerZ=0,regionId=%world%_plot_%number%,regionInset=5,regionMinY=40,regionMaxY=100,regionPrice=50`
+`/mv create test NORMAL -g PlotGenerator:testschematic,overlap=1,x=100,y=64,z=0,regionId=%world%_plot_%number%,regionInset=5,regionMinY=40,regionMaxY=100,regionPrice=50`
 
 `/mv create mb_plotworld NORMAL -g PlotGenerator:config=test,schem=plot` (You need to have the test section of the config defined, it wont use the generator of the test world!)
 
