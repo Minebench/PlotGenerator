@@ -71,8 +71,8 @@ public class PlotChunkGenerator extends ChunkGenerator {
             startZ = length + startZ;
         }
 
-        int startY = Math.max(-64, center.getBlockY());
-        int height = Math.min(startY + schematic.getHeight(), world.getMaxHeight());
+        int startY = center.getBlockY();
+        int height = startY + schematic.getHeight();
 
         BlockVector3 sign = null;
         for (int chunkX = 0; chunkX < 16; chunkX++) {
