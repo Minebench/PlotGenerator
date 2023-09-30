@@ -35,10 +35,17 @@ public class PlotSchematic {
 
         blocks = new BlockData[getWidth()][getHeight()][getLength()];
 
-        for (int x = 0; x < getWidth(); x++) {
-            for (int z = 0; z < getLength(); z++) {
-                for (int y = 0; y < getHeight(); y++) {
-                    setBlock(x, y, z, BukkitAdapter.adapt(clipboard.getBlock(BlockVector3.at(x, y, z))));
+        BlockVector3 minimumPoint = clipboard.getMinimumPoint();
+        BlockVector3 maximumPoint = clipboard.getMaximumPoint();
+
+        for (int x = minimumPoint.getBlockX(); x < maximumPoint.getBlockX() + 1; x++) {
+            for (int z = minimumPoint.getBlockZ(); z < maximumPoint.getBlockZ() + 1; z++) {
+                for (int y = minimumPoint.getBlockY(); y < maximumPoint.getBlockY() + 1; y++) {
+                    BlockVector3 pos = BlockVector3.at(x, y, z);
+                    BlockData adapt = BukkitAdapter.adapt(clipboard.getBlock(pos));
+
+                    BlockVector3 relPos = pos.subtract(minimumPoint);
+                    setBlock(relPos.getBlockX(), relPos.getBlockY(), relPos.getBlockZ(), adapt);
                 }
             }
         }

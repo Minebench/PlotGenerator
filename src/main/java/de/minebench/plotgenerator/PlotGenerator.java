@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -151,38 +152,40 @@ public final class PlotGenerator extends JavaPlugin {
         return economy;
     }
 
-    public PlotSchematic loadSchematic(String schematicName) {
-        if (schematicName == null || schematicName.isEmpty()) {
-            return null;
-        }
+    public CompletableFuture<PlotSchematic> loadSchematic(String schematicName) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (schematicName == null || schematicName.isEmpty()) {
+                return null;
+            }
 
-        File file = new File(getDataFolder(), schematicName + ".schem");
-        if (!file.exists()){
-            file = new File(weSchemDir, schematicName + ".schem");
-        }
-        if (!file.exists()){
-            file = new File(getDataFolder(), schematicName + ".schematic");
-        }
-        if (!file.exists()){
-            file = new File(weSchemDir, schematicName + ".schematic");
-        }
-        if (!file.exists()) {
-            getLogger().log(Level.SEVERE, "No schematic found with the name " + schematicName + "!");
-            return null;
-        }
+            File file = new File(getDataFolder(), schematicName + ".schem");
+            if (!file.exists()){
+                file = new File(weSchemDir, schematicName + ".schem");
+            }
+            if (!file.exists()){
+                file = new File(getDataFolder(), schematicName + ".schematic");
+            }
+            if (!file.exists()){
+                file = new File(weSchemDir, schematicName + ".schematic");
+            }
+            if (!file.exists()) {
+                getLogger().log(Level.SEVERE, "No schematic found with the name " + schematicName + "!");
+                return null;
+            }
 
-        ClipboardFormat format = ClipboardFormats.findByFile(file);
-        if (format == null) {
-            getLogger().log(Level.SEVERE, "Could not load schematic format from file " + file.getAbsolutePath() + "!");
-            return null;
-        }
+            ClipboardFormat format = ClipboardFormats.findByFile(file);
+            if (format == null) {
+                getLogger().log(Level.SEVERE, "Could not load schematic format from file " + file.getAbsolutePath() + "!");
+                return null;
+            }
 
-        try {
-            return new PlotSchematic(loadSchematicFromFile(file, format));
-        } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Error loading file " + file.getAbsolutePath(), e);
-            return null;
-        }
+            try {
+                return new PlotSchematic(loadSchematicFromFile(file, format));
+            } catch (Exception e) {
+                getLogger().log(Level.SEVERE, "Error loading file " + file.getAbsolutePath(), e);
+                return null;
+            }
+        });
     }
 
     private Clipboard loadSchematicFromFile(File file, ClipboardFormat format) throws IOException {

@@ -46,54 +46,67 @@ public class PlotChunkGenerator extends ChunkGenerator {
     @Override
     public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) {
         ChunkData data = createChunkData(world);
-        PlotGeneratorConfig config = getConfig(world);
-        if (config != null && config.getSchematic() != null && !BlockVector3.ZERO.equals(config.getSchematic().getSize())) {
-            PlotSchematic schematic = config.getSchematic();
-            BlockVector3 center = config.getCenter();
-            int width = schematic.getWidth() - config.getOverlap();
-            int startX = (x * 16 - center.getBlockX()) % width;
-            while (startX < 0) {
-                startX = width + startX;
-            }
-            int length = schematic.getLength() - config.getOverlap();
-            int startZ = (z * 16 - center.getBlockZ()) % length;
-            while (startZ < 0) {
-                startZ = length + startZ;
-            }
 
-            BlockVector3 sign = null;
-            for (int chunkX = 0; chunkX < 16; chunkX++) {
-                int schemX = (startX + chunkX) % width;
-                for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
-                    int schemZ = (startZ + chunkZ) % length;
-                    for (int chunkY = 0; chunkY < schematic.getHeight(); chunkY++) {
-                        BlockData block = schematic.getBlock(schemX, chunkY, schemZ);
-                        data.setBlock(chunkX, chunkY, chunkZ, block);
-                        if (sign == null && (block instanceof Sign || block instanceof WallSign)) {
-                            sign = BlockVector3.at(x * 16 + chunkX, chunkY, z * 16 + chunkZ);
-                        }
+        PlotGeneratorConfig config = getConfig(world);
+        if (config == null) {
+            return data;
+        }
+
+        PlotSchematic schematic = config.getSchematic();
+        if (schematic == null || BlockVector3.ZERO.equals(schematic.getSize())) {
+            return data;
+        }
+
+        BlockVector3 center = config.getCenter();
+
+        int width = schematic.getWidth() - config.getOverlap();
+        int startX = (x * 16 - center.getBlockX()) % width;
+        while (startX < 0) {
+            startX = width + startX;
+        }
+
+        int length = schematic.getLength() - config.getOverlap();
+        int startZ = (z * 16 - center.getBlockZ()) % length;
+        while (startZ < 0) {
+            startZ = length + startZ;
+        }
+
+        int startY = center.getBlockY();
+        int height = startY + schematic.getHeight();
+
+        BlockVector3 sign = null;
+        for (int chunkX = 0; chunkX < 16; chunkX++) {
+            int schemX = (startX + chunkX) % width;
+            for (int chunkZ = 0; chunkZ < 16; chunkZ++) {
+                int schemZ = (startZ + chunkZ) % length;
+                for (int chunkY = startY; chunkY < height; chunkY++) {
+                    BlockData block = schematic.getBlock(schemX, chunkY - startY, schemZ);
+                    data.setBlock(chunkX, chunkY, chunkZ, block);
+                    if (sign == null && (block instanceof Sign || block instanceof WallSign)) {
+                        sign = BlockVector3.at(x * 16 + chunkX, chunkY, z * 16 + chunkZ);
                     }
                 }
             }
-
-            if (plugin.getWorldGuard() != null && config.getRegionId() != null) {
-                BlockVector3 minPoint = BlockVector3.at(
-                        x * 16 - startX + config.getRegionInset(),
-                        config.getRegionMinY(),
-                        z * 16 - startZ + config.getRegionInset()
-                );
-                BlockVector3 maxPoint = BlockVector3.at(
-                        minPoint.getBlockX() + width - 2 * config.getRegionInset(),
-                        config.getRegionMaxY(),
-                        minPoint.getBlockZ() + length - 2 * config.getRegionInset()
-                );
-                RegionIntent intent = new RegionIntent(world, config, minPoint, maxPoint);
-                if (sign != null ) {
-                    intent.setSign(sign);
-                }
-                plugin.registerRegionIntent(intent);
-            }
         }
+
+        if (plugin.getWorldGuard() != null && config.getRegionId() != null) {
+            BlockVector3 minPoint = BlockVector3.at(
+                    x * 16 - startX + config.getRegionInset(),
+                    config.getRegionMinY(),
+                    z * 16 - startZ + config.getRegionInset()
+            );
+            BlockVector3 maxPoint = BlockVector3.at(
+                    minPoint.getBlockX() + width - 2 * config.getRegionInset(),
+                    config.getRegionMaxY(),
+                    minPoint.getBlockZ() + length - 2 * config.getRegionInset()
+            );
+            RegionIntent intent = new RegionIntent(world, config, minPoint, maxPoint);
+            if (sign != null ) {
+                intent.setSign(sign);
+            }
+            plugin.registerRegionIntent(intent);
+        }
+
         return data;
     }
 
