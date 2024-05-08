@@ -42,6 +42,9 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import de.minebench.plotgenerator.commands.BuyPlotCommand;
 import de.minebench.plotgenerator.commands.PlotGeneratorCommand;
 import de.minebench.plotsigns.PlotSigns;
+import io.github.apfelcreme.RegionReset.Blueprint;
+import io.github.apfelcreme.RegionReset.Exceptions.MissingFileException;
+import io.github.apfelcreme.RegionReset.RegionReset;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -67,6 +70,7 @@ public final class PlotGenerator extends JavaPlugin {
 
     private WorldGuardPlugin worldGuard = null;
     private PlotSigns plotSigns;
+    private RegionReset regionReset;
 
     private Economy economy;
 
@@ -135,6 +139,13 @@ public final class PlotGenerator extends JavaPlugin {
             plotSigns = PlotSigns.getPlugin(PlotSigns.class);
         }
         return plotSigns;
+    }
+
+    public RegionReset getRegionReset() {
+        if (regionReset == null && getServer().getPluginManager().isPluginEnabled("RegionReset")) {
+            regionReset = RegionReset.getPlugin(RegionReset.class);
+        }
+        return regionReset;
     }
 
     public Economy getEconomy() {
@@ -251,6 +262,18 @@ public final class PlotGenerator extends JavaPlugin {
                     getLogger().log(Level.INFO, "Added new region " + regionId + " at " + intent.getMinPoint() + " " + intent.getMaxPoint());
                     if (intent.getSign() != null) {
                         registerBuySign(intent);
+                    }
+                    if (intent.getConfig().getBlueprint() != null && getRegionReset() != null) {
+                        Blueprint blueprint = io.github.apfelcreme.RegionReset.RegionManager.getInstance().getBlueprint(intent.getConfig().getBlueprint());
+                        if (blueprint != null) {
+                            try {
+                                io.github.apfelcreme.RegionReset.RegionManager.getInstance().addRegion(getServer().getConsoleSender(), region, blueprint, intent.getWorld());
+                            } catch (MissingFileException e) {
+                                getLogger().log(Level.SEVERE, "Could not add region " + region.getId() + " to blueprint " + intent.getConfig().getBlueprint() + " as that blueprint does not have a file?");
+                            }
+                        } else {
+                            getLogger().log(Level.SEVERE, "Could not add region " + region.getId() + " to blueprint " + intent.getConfig().getBlueprint() + " as that blueprint does not exist?");
+                        }
                     }
                 }
             }

@@ -3,7 +3,7 @@ version: '${minecraft.plugin.version}'
 main: de.minebench.plotgenerator.PlotGenerator
 load: STARTUP
 depend: [WorldEdit]
-softdepend: [PlotSigns,WorldGuard,Vault]
+softdepend: [PlotSigns,RegionReset,WorldGuard,Vault]
 authors: [Phoenix616]
 description: ${project.description}
 api-version: "1.13"

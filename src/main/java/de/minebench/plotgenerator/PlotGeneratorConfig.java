@@ -35,8 +35,9 @@ public class PlotGeneratorConfig {
     private final int regionMaxY;
     private final double regionPrice;
     private final String plotType;
+    private final String blueprint;
 
-    public PlotGeneratorConfig(String id, PlotSchematic schematic, BlockVector3 center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotType) {
+    public PlotGeneratorConfig(String id, PlotSchematic schematic, BlockVector3 center, int overlap, String regionId, int regionInset, int regionMinY, int regionMaxY, double regionPrice, String plotType, String blueprint) {
         this.id = id;
         this.schematic = schematic;
         this.center = center;
@@ -47,6 +48,7 @@ public class PlotGeneratorConfig {
         this.regionMaxY = regionMaxY;
         this.regionPrice = regionPrice;
         this.plotType = plotType;
+        this.blueprint = blueprint;
     }
 
     public static PlotGeneratorConfig fromId(PlotGenerator plugin, String id) {
@@ -119,6 +121,8 @@ public class PlotGeneratorConfig {
                     }
                 } else if ("plotType".equalsIgnoreCase(parts[0])) {
                     b.plotType(parts[1]);
+                } else if ("blueprint".equalsIgnoreCase(parts[0])) {
+                    b.blueprint(parts[1]);
                 }
             }
         }
@@ -171,6 +175,9 @@ public class PlotGeneratorConfig {
         if (config.contains("plotsigns.type")) {
             b.plotType(config.getString("plotsigns.type"));
         }
+        if (config.contains("regionreset.blueprint")) {
+            b.blueprint(config.getString("regionreset.blueprint"));
+        }
 
         return b.build();
     }
@@ -211,6 +218,10 @@ public class PlotGeneratorConfig {
         return plotType;
     }
 
+    public String getBlueprint() {
+        return blueprint;
+    }
+
     public String getId() {
         return id;
     }
@@ -227,8 +238,7 @@ public class PlotGeneratorConfig {
         private int regionMaxY = 255;
         private double regionPrice = -1;
         private String plotType = null;
-        private double landPrice = -1;
-        private String landPermission = null;
+        private String blueprint = null;
         private PlotGenerator plugin;
 
         public Builder(PlotGenerator plugin, String id) {
@@ -316,20 +326,14 @@ public class PlotGeneratorConfig {
             return this;
         }
 
-        public Builder landPrice(double landPrice) {
-            this.landPrice = landPrice;
-            plugin.getLogger().log(Level.INFO, "MbRegionConomy land price: " + landPrice);
-            return this;
-        }
-
-        public Builder landPermission(String landPermission) {
-            this.landPermission = landPermission;
-            plugin.getLogger().log(Level.INFO, "MbRegionConomy land permission: " + landPermission);
+        public Builder blueprint(String blueprint) {
+            this.blueprint = blueprint;
+            plugin.getLogger().log(Level.INFO, "RegionReset blueprint: " + blueprint);
             return this;
         }
 
         public PlotGeneratorConfig build() {
-            return new PlotGeneratorConfig(id, schematic, center, overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, plotType);
+            return new PlotGeneratorConfig(id, schematic, center, overlap, regionId, regionInset, regionMinY, regionMaxY, regionPrice, plotType, blueprint);
         }
 
         public Builder copy(PlotGeneratorConfig config) {
